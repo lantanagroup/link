@@ -217,7 +217,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "Encounter\\.identifier\\.system: minimum required = 1, but only found 0 \\(from http:\/\/hl7\\.org\/fhir\/us\/core\/StructureDefinition\/us-core-encounter\\|\\d+\\.\\d+\\.\\d+\\)"
+            "regex": "Encounter\\.identifier\\.system: minimum required = 1, but only found 0 \\(from http://hl7\\.org/fhir/us/core/StructureDefinition/us-core-encounter\\|\\d+\\.\\d+\\.\\d+\\)"
           }
         ],
         "andOperator": false
@@ -634,7 +634,7 @@
     "title": "Does Not Match Preferred or Example Binding ValueSet",
     "severity": "INFORMATION",
     "acceptable": true,
-    "guidance": "External: None of the codings provided match a ValueSet with a preferred or example binding strength. Preferred and example bindings are recommendations for interoperability — they suggest which codes to use but do not require them. The presence of a code outside these ValueSets does not affect NHSN reporting or measure calculation, provided the clinical intent is accurately captured. No action is required for reporting to NHSN.",
+    "guidance": "External: None of the codings provided match a ValueSet with a preferred or example binding strength. Preferred and example bindings are recommendations for interoperability \u00e2\u20ac\u201d they suggest which codes to use but do not require them. The presence of a code outside these ValueSets does not affect NHSN reporting or measure calculation, provided the clinical intent is accurately captured. No action is required for reporting to NHSN.",
     "ruleSets": [
       {
         "rules": [
@@ -1521,6 +1521,2946 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "^Unable to find a match for profile #\\d+ among choices: .*ip-measurereport-list.*$"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_condition_category_code",
+    "title": "Missing valid Condition category code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Condition.category contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Condition\\.category(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Condition\\.category|The code .*? is not valid in the value set.*Condition\\.category)"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided\\, and a code should be provided from the value set 'US Core Condition Category Codes'\\s*\\(http://hl7\\.org/fhir/us/core/ValueSet/us-core-condition-category(?:\\|[0-9]+(?:\\.[0-9]+)*)?\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_condition_category_code",
+    "title": "Missing active Condition category code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Condition.category contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Condition\\.category(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Condition\\.category|Code .*?in .*?is (retired|inactive|deprecated).*Condition\\.category)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_condition_category_element",
+    "title": "Missing Condition category element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Condition.category element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Condition\\.category: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_condition_code",
+    "title": "Missing valid Condition code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Condition.code contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^No code provided, and a code should be provided from the value set 'US Core Condition Codes' \\(http://hl7\\.org/fhir/us/core/ValueSet/us-core-condition-code\\|[0-9.]+\\)$"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Rule Condition-coding-from-common-codesystems: 'Condition: code must contains a SNOMED CT, ICD-10-CM, or ICD-9-CM coding' Failed"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'US Core Condition Codes' \\(http://hl7\\.org/fhir/us/core/ValueSet/us-core-condition-code\\|[^)]+\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(codes = .+\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_condition_code",
+    "title": "Missing active Condition code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Condition.code contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Condition\\.code(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Condition\\.code|Code .*?in .*?is (retired|inactive|deprecated).*Condition\\.code)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_condition_code_element",
+    "title": "Missing Condition code element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Condition.code element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Condition\\.code: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_coverage_relationship_code",
+    "title": "Missing valid Coverage relationship code",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Coverage.relationship contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Coverage\\.relationship(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Coverage\\.relationship|The code .*? is not valid in the value set.*Coverage\\.relationship)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_coverage_relationship_code",
+    "title": "Missing active Coverage relationship code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Coverage.relationship contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Coverage\\.relationship(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Coverage\\.relationship|Code .*?in .*?is (retired|inactive|deprecated).*Coverage\\.relationship)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_coverage_relationship_element",
+    "title": "Missing Coverage relationship element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Coverage.relationship element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Coverage\\.relationship: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_coverage_identifier_subscriber_id_element",
+    "title": "Missing Coverage Identifier/Subscriber Id Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "The US Core invariant us-core-15 requires that a Member Id be present in either Coverage.identifier or Coverage.subscriberId. Ensure at least one of these fields is populated with a valid Member Id. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Constraint failed: us-core-15: 'Member Id in Coverage\\.identifier or Coverage\\.subscriberId SHALL be present' \\(defined in http://hl7\\.org/fhir/us/core/StructureDefinition/us-core-coverage\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_coverage_status_code",
+    "title": "Missing valid Coverage status code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Coverage.status contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Coverage\\.status(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Coverage\\.status|The code .*? is not valid in the value set.*Coverage\\.status)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_coverage_status_code",
+    "title": "Missing active Coverage status code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Coverage.status contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Coverage\\.status(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Coverage\\.status|Code .*?in .*?is (retired|inactive|deprecated).*Coverage\\.status)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_coverage_status_element",
+    "title": "Missing Coverage status element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Coverage.status element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Coverage\\.status: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_coverage_type_code",
+    "title": "Missing valid Coverage type code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Coverage.type contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'Payer Type' \\(http://cts\\.nlm\\.nih\\.gov/fhir/ValueSet/2\\.16\\.840\\.1\\.114222\\.4\\.11\\.3591\\|[^)]+\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(codes = .+\\)"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'Coverage Type and Self-Pay Codes' \\(http://hl7\\.org/fhir/ValueSet/coverage-type\\|[^)]+\\), and a coding is recommended to come from this value set \\(codes = .+\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_coverage_type_code",
+    "title": "Missing active Coverage type code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Coverage.type contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Coverage\\.type(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Coverage\\.type|Code .*?in .*?is (retired|inactive|deprecated).*Coverage\\.type)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_diagnosticreport_category_code",
+    "title": "Missing valid DiagnosticReport category code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "DiagnosticReport.category contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(DiagnosticReport\\.category(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*DiagnosticReport\\.category|The code .*? is not valid in the value set.*DiagnosticReport\\.category)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_diagnosticreport_category_code",
+    "title": "Missing active DiagnosticReport category code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "DiagnosticReport.category contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(DiagnosticReport\\.category(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*DiagnosticReport\\.category|Code .*?in .*?is (retired|inactive|deprecated).*DiagnosticReport\\.category)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_diagnosticreport_category_element",
+    "title": "Missing DiagnosticReport category element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "DiagnosticReport.category element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "DiagnosticReport\\.category: minimum required = 1, but only found 0"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "DiagnosticReport\\.category:[A-Za-z]+Slice: minimum required = \\d+, but only found \\d+ \\(from http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-daily-diagnosticreport-lab\\|[^)]+\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_diagnosticreport_code",
+    "title": "Missing valid DiagnosticReport code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "DiagnosticReport.code contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'LOINC Diagnostic Report Codes' \\(http://hl7\\.org/fhir/ValueSet/report-codes\\|[\\d.]+\\)"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'US Core Non Laboratory Codes' \\(http://hl7\\.org/fhir/us/core/ValueSet/us-core-diagnosticreport-report-and-note-codes\\|[^)]+\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(codes = .+\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_diagnosticreport_code",
+    "title": "Missing active DiagnosticReport code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "DiagnosticReport.code contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(DiagnosticReport\\.code(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*DiagnosticReport\\.code|Code .*?in .*?is (retired|inactive|deprecated).*DiagnosticReport\\.code)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_diagnosticreport_code_element",
+    "title": "Missing DiagnosticReport code element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "DiagnosticReport.code element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "DiagnosticReport\\.code: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_diagnosticreport_encounter_element",
+    "title": "Missing DiagnosticReport Encounter element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "DiagnosticReport.encounter.reference is required but was not provided. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "DiagnosticReport\\.encounter\\.reference: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_encounter_class_code",
+    "title": "Missing valid Encounter class code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Encounter.class contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The Coding provided \\([^)]+\\) is not in the value set 'V3 Value SetActEncounterCode' \\(http://terminology\\.hl7\\.org/ValueSet/v3-ActEncounterCode\\|[^)]+\\), and a code should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\)\\. \\(error message = Unknown code '[^']*' for in-memory expansion of ValueSet 'http://terminology\\.hl7\\.org/ValueSet/v3-ActEncounterCode'\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_encounter_class_code",
+    "title": "Missing active Encounter class code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Encounter.class contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Encounter\\.class(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Encounter\\.class|Code .*?in .*?is (retired|inactive|deprecated).*Encounter\\.class)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_encounter_class_element",
+    "title": "Missing Encounter class element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Encounter.class element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Encounter\\.class: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_encounter_hospitalization_admitsource_code",
+    "title": "Missing valid Encounter hospitalization admitSource code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Encounter.hospitalization.admitSource contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'Admit source' \\(http://hl7\\.org/fhir/ValueSet/encounter-admit-source\\|[^)]+\\), and a coding is recommended to come from this value set\\) \\(codes = .+\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_encounter_hospitalization_admitsource_code",
+    "title": "Missing active Encounter hospitalization admitSource code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Encounter.hospitalization.admitSource contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Encounter\\.hospitalization\\.admitSource(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Encounter\\.hospitalization\\.admitSource|Code .*?in .*?is (retired|inactive|deprecated).*Encounter\\.hospitalization\\.admitSource)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_encounter_hospitalization_dischargedisposition_code",
+    "title": "Missing valid Encounter hospitalization dischargeDisposition code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Encounter.hospitalization.dischargeDisposition contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Encounter\\.hospitalization\\.dischargeDisposition(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Encounter\\.hospitalization\\.dischargeDisposition|The code .*? is not valid in the value set.*Encounter\\.hospitalization\\.dischargeDisposition)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_encounter_hospitalization_dischargedisposition_code",
+    "title": "Missing active Encounter hospitalization dischargeDisposition code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Encounter.hospitalization.dischargeDisposition contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Encounter\\.hospitalization\\.dischargeDisposition(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Encounter\\.hospitalization\\.dischargeDisposition|Code .*?in .*?is (retired|inactive|deprecated).*Encounter\\.hospitalization\\.dischargeDisposition)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_encounter_reason_code",
+    "title": "Missing valid Encounter reason code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Encounter.reasonCode contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'Encounter Reason Codes' \\(http://hl7\\.org/fhir/ValueSet/encounter-reason\\|[^)]+\\), and a coding is recommended to come from this value set\\) \\(codes = .+\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_encounter_type_code",
+    "title": "Missing valid Encounter type code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Encounter.type contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Encounter\\.type(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Encounter\\.type|The code .*? is not valid in the value set.*Encounter\\.type)"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'US Core Encounter Type' \\(http://hl7\\.org/fhir/us/core/ValueSet/us-core-encounter-type\\|[^)]+\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(codes = .+\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_encounter_type_code",
+    "title": "Missing active Encounter type code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Encounter.type contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Encounter\\.type(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Encounter\\.type|Code .*?in .*?is (retired|inactive|deprecated).*Encounter\\.type)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_encounter_type_element",
+    "title": "Missing Encounter type element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Encounter.type element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Encounter\\.type: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_location_physicaltype_code",
+    "title": "Missing active Location physicalType code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Location.physicalType contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Location\\.physicalType(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Location\\.physicalType|Code .*?in .*?is (retired|inactive|deprecated).*Location\\.physicalType)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_location_physicaltype_element",
+    "title": "Missing Location physicalType element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Location.physicalType element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Location\\.physicalType: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_location_type_code",
+    "title": "Missing valid Location type code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Location.type contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Location\\.type(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Location\\.type|The code .*? is not valid in the value set.*Location\\.type)"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'V3 Value SetServiceDeliveryLocationRoleType' \\(http://terminology\\.hl7\\.org/ValueSet/v3-ServiceDeliveryLocationRoleType\\|[^)]+\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(codes = .+\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_location_type_code",
+    "title": "Missing active Location type code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Location.type contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Location\\.type(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Location\\.type|Code .*?in .*?is (retired|inactive|deprecated).*Location\\.type)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_location_type_element",
+    "title": "Missing Location type element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Location.type element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Location\\.type: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_location_period_element",
+    "title": "Missing Location period element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Location.period element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Location\\.period: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_medication_code",
+    "title": "Missing valid Medication code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Medication.code contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Medication\\.code(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Medication\\.code|The code .*? is not valid in the value set.*Medication\\.code)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_medication_code",
+    "title": "Missing active Medication code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Medication.code contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Medication\\.code(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Medication\\.code|Code .*?in .*?is (retired|inactive|deprecated).*Medication\\.code)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_medication_code_element",
+    "title": "Missing Medication code element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Medication.code element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Medication\\.code: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_medicationadministration_dosage_route_code",
+    "title": "Missing valid MedicationAdministration dosage route code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "MedicationAdministration.dosage.route contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'SNOMED CT Route Codes' \\(http://hl7\\.org/fhir/ValueSet/route-codes\\|[^)]+\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(codes = .+\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_medicationadministration_dosage_route_code",
+    "title": "Missing active MedicationAdministration dosage route code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "MedicationAdministration.dosage.route contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(MedicationAdministration\\.dosage\\.route(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*MedicationAdministration\\.dosage\\.route|Code .*?in .*?is (retired|inactive|deprecated).*MedicationAdministration\\.dosage\\.route)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_medicationadministration_dosage_route_element",
+    "title": "Missing MedicationAdministration dosage route element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "MedicationAdministration.dosage.route element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "MedicationAdministration\\.dosage\\.route: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_medicationadministration_medicationcodeableconcept_code",
+    "title": "Missing valid MedicationAdministration medicationCodeableConcept code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "MedicationAdministration.medicationCodeableConcept contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(MedicationAdministration\\.medicationCodeableConcept(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*MedicationAdministration\\.medicationCodeableConcept|The code .*? is not valid in the value set.*MedicationAdministration\\.medicationCodeableConcept)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_medicationadministration_medicationcodeableconcept_code",
+    "title": "Missing active MedicationAdministration medicationCodeableConcept code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "MedicationAdministration.medicationCodeableConcept contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(MedicationAdministration\\.medicationCodeableConcept(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*MedicationAdministration\\.medicationCodeableConcept|Code .*?in .*?is (retired|inactive|deprecated).*MedicationAdministration\\.medicationCodeableConcept)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_medicationadministration_medicationcodeableconcept_element",
+    "title": "Missing MedicationAdministration medicationCodeableConcept element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "MedicationAdministration.medicationCodeableConcept element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "MedicationAdministration\\.medicationCodeableConcept: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_medicationrequest_category_code",
+    "title": "Missing valid MedicationRequest category code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "MedicationRequest.category contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(MedicationRequest\\.category(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*MedicationRequest\\.category|The code .*? is not valid in the value set.*MedicationRequest\\.category)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_medicationrequest_category_code",
+    "title": "Missing active MedicationRequest category code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "MedicationRequest.category contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(MedicationRequest\\.category(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*MedicationRequest\\.category|Code .*?in .*?is (retired|inactive|deprecated).*MedicationRequest\\.category)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_medicationrequest_category_element",
+    "title": "Missing MedicationRequest category element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "MedicationRequest.category element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "MedicationRequest\\.category: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_medicationrequest_dosageinstruction_timing_repeat_code",
+    "title": "Missing valid MedicationRequest dosageInstruction timing repeat code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "MedicationRequest.dosageInstruction.timing.repeat contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(MedicationRequest\\.dosageInstruction\\.timing\\.repeat(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*MedicationRequest\\.dosageInstruction\\.timing\\.repeat|The code .*? is not valid in the value set.*MedicationRequest\\.dosageInstruction\\.timing\\.repeat)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_medicationrequest_dosageinstruction_timing_repeat_code",
+    "title": "Missing active MedicationRequest dosageInstruction timing repeat code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "MedicationRequest.dosageInstruction.timing.repeat contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(MedicationRequest\\.dosageInstruction\\.timing\\.repeat(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*MedicationRequest\\.dosageInstruction\\.timing\\.repeat|Code .*?in .*?is (retired|inactive|deprecated).*MedicationRequest\\.dosageInstruction\\.timing\\.repeat)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_medicationrequest_dosageinstruction_route_code",
+    "title": "Missing valid MedicationRequest dosageInstruction route code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "MedicationRequest.dosageInstruction.route contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(MedicationRequest\\.dosageInstruction\\.route(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*MedicationRequest\\.dosageInstruction\\.route|The code .*? is not valid in the value set.*MedicationRequest\\.dosageInstruction\\.route)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_medicationrequest_dosageinstruction_route_code",
+    "title": "Missing active MedicationRequest dosageInstruction route code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "MedicationRequest.dosageInstruction.route contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(MedicationRequest\\.dosageInstruction\\.route(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*MedicationRequest\\.dosageInstruction\\.route|Code .*?in .*?is (retired|inactive|deprecated).*MedicationRequest\\.dosageInstruction\\.route)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_medicationrequest_dosageinstruction_route_element",
+    "title": "Missing MedicationRequest dosageInstruction route element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "MedicationRequest.dosageInstruction.route element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "MedicationRequest\\.dosageInstruction\\.route: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_medicationrequest_intent_code",
+    "title": "Missing valid MedicationRequest intent code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "MedicationRequest.intent contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(MedicationRequest\\.intent(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*MedicationRequest\\.intent|The code .*? is not valid in the value set.*MedicationRequest\\.intent)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_medicationrequest_intent_code",
+    "title": "Missing active MedicationRequest intent code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "MedicationRequest.intent contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(MedicationRequest\\.intent(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*MedicationRequest\\.intent|Code .*?in .*?is (retired|inactive|deprecated).*MedicationRequest\\.intent)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_medicationrequest_intent_element",
+    "title": "Missing MedicationRequest intent element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "MedicationRequest.intent element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "MedicationRequest\\.intent: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_medicationrequest_medicationcodeableconcept_code",
+    "title": "Missing valid MedicationRequest medicationCodeableConcept code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "MedicationRequest.medicationCodeableConcept contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(MedicationRequest\\.medicationCodeableConcept(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*MedicationRequest\\.medicationCodeableConcept|The code .*? is not valid in the value set.*MedicationRequest\\.medicationCodeableConcept)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_medicationrequest_medicationcodeableconcept_code",
+    "title": "Missing active MedicationRequest medicationCodeableConcept code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "MedicationRequest.medicationCodeableConcept contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(MedicationRequest\\.medicationCodeableConcept(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*MedicationRequest\\.medicationCodeableConcept|Code .*?in .*?is (retired|inactive|deprecated).*MedicationRequest\\.medicationCodeableConcept)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_medicationrequest_medicationcodeableconcept_element",
+    "title": "Missing MedicationRequest medicationCodeableConcept element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "MedicationRequest.medicationCodeableConcept element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "MedicationRequest\\.medicationCodeableConcept: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_medicationrequest_priority_code",
+    "title": "Missing valid MedicationRequest priority code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "MedicationRequest.priority contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(MedicationRequest\\.priority(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*MedicationRequest\\.priority|The code .*? is not valid in the value set.*MedicationRequest\\.priority)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_medicationrequest_priority_code",
+    "title": "Missing active MedicationRequest priority code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "MedicationRequest.priority contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(MedicationRequest\\.priority(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*MedicationRequest\\.priority|Code .*?in .*?is (retired|inactive|deprecated).*MedicationRequest\\.priority)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_medicationrequest_reasoncode",
+    "title": "Missing valid MedicationRequest reasoncode",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "MedicationRequest.reasonCode contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(MedicationRequest\\.reasonCode(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*MedicationRequest\\.reasonCode|The code .*? is not valid in the value set.*MedicationRequest\\.reasonCode)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_medicationrequest_reasoncode",
+    "title": "Missing active MedicationRequest reasoncode",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "MedicationRequest.reasonCode contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(MedicationRequest\\.reasonCode(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*MedicationRequest\\.reasonCode|Code .*?in .*?is (retired|inactive|deprecated).*MedicationRequest\\.reasonCode)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_medicationrequest_status_code",
+    "title": "Missing valid MedicationRequest status code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "MedicationRequest.status contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(MedicationRequest\\.status(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*MedicationRequest\\.status|The code .*? is not valid in the value set.*MedicationRequest\\.status)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_medicationrequest_status_code",
+    "title": "Missing active MedicationRequest status code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "MedicationRequest.status contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(MedicationRequest\\.status(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*MedicationRequest\\.status|Code .*?in .*?is (retired|inactive|deprecated).*MedicationRequest\\.status)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_medicationrequest_status_element",
+    "title": "Missing MedicationRequest status element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "MedicationRequest.status element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "MedicationRequest\\.status: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_observation_category_code",
+    "title": "Missing valid Observation category code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Observation.category contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'Observation Category Codes' \\(http://hl7\\.org/fhir/ValueSet/observation-category\\|[^)]+\\), and a coding is recommended to come from this value set\\) \\(codes = .+\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_observation_bodysite_code",
+    "title": "Missing valid Observation bodySite code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Observation.bodySite contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Observation\\.bodySite(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Observation\\.bodySite|The code .*? is not valid in the value set.*Observation\\.bodySite)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_observation_bodysite_code",
+    "title": "Missing active Observation bodySite code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Observation.bodySite contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Observation\\.bodySite(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Observation\\.bodySite|Code .*?in .*?is (retired|inactive|deprecated).*Observation\\.bodySite)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_observation_bodysite_element",
+    "title": "Missing Observation bodySite element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Observation.bodySite element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Observation\\.bodySite: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_observation_code",
+    "title": "Missing valid Observation code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Observation.code contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Observation\\.code(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Observation\\.code|The code .*? is not valid in the value set.*Observation\\.code)"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'US Core Vital Signs ValueSet' \\(http://hl7\\.org/fhir/us/core/ValueSet/us-core-vital-signs\\|[^)]+\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(codes = .+\\)"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'US Core Laboratory Test Codes' \\(http://hl7\\.org/fhir/us/core/ValueSet/us-core-laboratory-test-codes\\|[^)]+\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(codes = .+\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_observation_code",
+    "title": "Missing active Observation code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Observation.code contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Observation\\.code(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Observation\\.code|Code .*?in .*?is (retired|inactive|deprecated).*Observation\\.code)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_observation_code_element",
+    "title": "Missing Observation code element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Observation.code element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Observation\\.code: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_observation_component_code",
+    "title": "Missing valid Observation component code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Observation.component.code contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Observation\\.component\\.code(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Observation\\.component\\.code|The code .*? is not valid in the value set.*Observation\\.component\\.code)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_observation_component_code",
+    "title": "Missing active Observation component code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Observation.component.code contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Observation\\.component\\.code(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Observation\\.component\\.code|Code .*?in .*?is (retired|inactive|deprecated).*Observation\\.component\\.code)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_observation_component_code_element",
+    "title": "Missing Observation component code element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Observation.component.code element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Observation\\.component\\.code: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_observation_method_code",
+    "title": "Missing valid Observation method code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Observation.method contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Observation\\.method(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Observation\\.method|The code .*? is not valid in the value set.*Observation\\.method)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_observation_method_code",
+    "title": "Missing active Observation method code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Observation.method contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Observation\\.method(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Observation\\.method|Code .*?in .*?is (retired|inactive|deprecated).*Observation\\.method)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_observation_interpretation_code",
+    "title": "Missing valid Observation interpretation code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Observation.interpretation contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Observation\\.interpretation(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Observation\\.interpretation|The code .*? is not valid in the value set.*Observation\\.interpretation)"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'Observation Interpretation Codes' \\(http://hl7\\.org/fhir/ValueSet/observation-interpretation\\|[^)]+\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_observation_interpretation_code",
+    "title": "Missing active Observation interpretation code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Observation.interpretation contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Observation\\.interpretation(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Observation\\.interpretation|Code .*?in .*?is (retired|inactive|deprecated).*Observation\\.interpretation)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_observation_status_code",
+    "title": "Missing valid Observation status code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Observation.status contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Observation\\.status(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Observation\\.status|The code .*? is not valid in the value set.*Observation\\.status)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_observation_status_code",
+    "title": "Missing active Observation status code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Observation.status contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Observation\\.status(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Observation\\.status|Code .*?in .*?is (retired|inactive|deprecated).*Observation\\.status)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_observation_status_element",
+    "title": "Missing Observation status element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Observation.status element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Observation\\.status: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_observation_value_code",
+    "title": "Missing valid Observation value code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Observation.value contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The Coding provided \\([^)]+\\) was not found in the value set 'Vital Signs Units' \\(http://hl7\\.org/fhir/ValueSet/ucum-vitals-common\\|[^)]+\\), and a code should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\)\\. \\(error message = Unknown code '[^']*' for in-memory expansion of ValueSet 'http://hl7\\.org/fhir/ValueSet/ucum-vitals-common'\\)"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Error processing unit '[^']*': The unit '[^']*' is unknown' at position \\d+ for '[^']*'"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_observation_value_code",
+    "title": "Missing active Observation value code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Observation.value contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Observation\\.value(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Observation\\.value|Code .*?in .*?is (retired|inactive|deprecated).*Observation\\.value)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_specimen_collection_bodysite_code",
+    "title": "Missing valid Specimen collection bodySite code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Specimen.collection.bodySite contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Specimen\\.collection\\.bodySite(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Specimen\\.collection\\.bodySite|The code .*? is not valid in the value set.*Specimen\\.collection\\.bodySite)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_observation_referenceRange",
+    "title": "Missing valid Observation referenceRange unit code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Observation.referenceRange.low or Observation.referenceRange.high contains a unit that is not a recognized UCUM code, and a valid UCUM unit is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Error processing unit '[^']*': The unit '[^']*' is unknown' at position \\d+ for 'http://unitsofmeasure\\.org#[^']*'"
+          },
+          {
+            "field": "EXPRESSION",
+            "regex": "Bundle\\.entry\\[\\d+\\]\\.resource\\.ofType\\(Observation\\)\\.where\\(id\\s*=\\s*'[^']*'\\)\\.referenceRange\\[\\d+\\]\\.(low|high)"
+          }
+        ],
+        "andOperator": true
+      }
+    ]
+  },
+  {
+    "id": "missing_active_specimen_collection_bodysite_code",
+    "title": "Missing active Specimen collection bodySite code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Specimen.collection.bodySite contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Specimen\\.collection\\.bodySite(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Specimen\\.collection\\.bodySite|Code .*?in .*?is (retired|inactive|deprecated).*Specimen\\.collection\\.bodySite)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_specimen_type_code",
+    "title": "Missing valid Specimen type code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Specimen.type contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Specimen\\.type(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Specimen\\.type|The code .*? is not valid in the value set.*Specimen\\.type)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_specimen_type_code",
+    "title": "Missing active Specimen type code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Specimen.type contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Specimen\\.type(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Specimen\\.type|Code .*?in .*?is (retired|inactive|deprecated).*Specimen\\.type)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_specimen_type_element",
+    "title": "Missing Specimen type element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Specimen.type element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Specimen\\.type: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_servicerequest_category_code",
+    "title": "Missing valid ServiceRequest category code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "ServiceRequest.category contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(ServiceRequest\\.category(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*ServiceRequest\\.category|The code .*? is not valid in the value set.*ServiceRequest\\.category)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_servicerequest_category_code",
+    "title": "Missing active ServiceRequest category code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "ServiceRequest.category contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(ServiceRequest\\.category(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*ServiceRequest\\.category|Code .*?in .*?is (retired|inactive|deprecated).*ServiceRequest\\.category)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_servicerequest_category_element",
+    "title": "Missing ServiceRequest category element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "ServiceRequest.category element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "ServiceRequest\\.category: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_servicerequest_code",
+    "title": "Missing valid ServiceRequest code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "ServiceRequest.code contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(ServiceRequest\\.code(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*ServiceRequest\\.code|The code .*? is not valid in the value set.*ServiceRequest\\.code)"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'US Core Laboratory Test Codes' \\(http://hl7\\.org/fhir/us/core/ValueSet/us-core-laboratory-test-codes\\|[^)]+\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(codes = .+\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_servicerequest_code",
+    "title": "Missing active ServiceRequest code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "ServiceRequest.code contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(ServiceRequest\\.code(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*ServiceRequest\\.code|Code .*?in .*?is (retired|inactive|deprecated).*ServiceRequest\\.code)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_servicerequest_code_element",
+    "title": "Missing ServiceRequest code element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "ServiceRequest.code element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "ServiceRequest\\.code: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_servicerequest_intent_code",
+    "title": "Missing valid ServiceRequest intent code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "ServiceRequest.intent contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(ServiceRequest\\.intent(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*ServiceRequest\\.intent|The code .*? is not valid in the value set.*ServiceRequest\\.intent)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_servicerequest_intent_code",
+    "title": "Missing active ServiceRequest intent code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "ServiceRequest.intent contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(ServiceRequest\\.intent(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*ServiceRequest\\.intent|Code .*?in .*?is (retired|inactive|deprecated).*ServiceRequest\\.intent)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_servicerequest_intent_element",
+    "title": "Missing ServiceRequest intent element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "ServiceRequest.intent element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "ServiceRequest\\.intent: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_servicerequest_status_code",
+    "title": "Missing valid ServiceRequest status code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "ServiceRequest.status contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(ServiceRequest\\.status(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*ServiceRequest\\.status|The code .*? is not valid in the value set.*ServiceRequest\\.status)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_servicerequest_status_code",
+    "title": "Missing active ServiceRequest status code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "ServiceRequest.status contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(ServiceRequest\\.status(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*ServiceRequest\\.status|Code .*?in .*?is (retired|inactive|deprecated).*ServiceRequest\\.status)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_servicerequest_status_element",
+    "title": "Missing ServiceRequest status element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "ServiceRequest.status element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "ServiceRequest\\.status: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_procedure_code",
+    "title": "Missing valid Procedure code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Procedure.code contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Procedure\\.code(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Procedure\\.code|The code .*? is not valid in the value set.*Procedure\\.code)"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'Procedure Codes \\(SNOMED CT\\)' \\(http://hl7\\.org/fhir/ValueSet/procedure-code\\|[^)]+\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(codes = .+\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_procedure_code",
+    "title": "Missing active Procedure code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Procedure.code contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Procedure\\.code(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Procedure\\.code|Code .*?in .*?is (retired|inactive|deprecated).*Procedure\\.code)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_procedure_code_element",
+    "title": "Missing Procedure code element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Procedure.code element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Procedure\\.code: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_patient_identifier_type_code",
+    "title": "Missing valid Patient identifier type code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Patient.identifier.type does not contain a code from the IdentifierType value set. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'IdentifierType' \\(http://hl7\\.org/fhir/ValueSet/identifier-type\\|[^)]+\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_patient_communication_language_code",
+    "title": "Missing valid Patient communication language code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Patient.communication.language contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Patient\\.communication\\.language(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Patient\\.communication\\.language|The code .*? is not valid in the value set.*Patient\\.communication\\.language)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_patient_communication_language_code",
+    "title": "Missing active Patient communication language code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Patient.communication.language contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Patient\\.communication\\.language(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Patient\\.communication\\.language|Code .*?in .*?is (retired|inactive|deprecated).*Patient\\.communication\\.language)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_patient_communication_language_element",
+    "title": "Missing Patient communication language element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Patient.communication.language element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Patient\\.communication\\.language: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_patient_marital_status_code",
+    "title": "Missing valid Patient marital status code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Patient.maritalStatus contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'MaritalStatus' \\(http://hl7\\.org/fhir/ValueSet/marital-status\\|[^)]+\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_patient_extension_birthsex_code",
+    "title": "Missing valid Patient extension birthsex code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Patient.extension:birthsex contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Patient\\.extension:birthsex(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Patient\\.extension:birthsex|The code .*? is not valid in the value set.*Patient\\.extension:birthsex)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_patient_extension_birthsex_code",
+    "title": "Missing active Patient extension birthsex code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Patient.extension:birthsex contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Patient\\.extension:birthsex(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Patient\\.extension:birthsex|Code .*?in .*?is (retired|inactive|deprecated).*Patient\\.extension:birthsex)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_patient_extension_ethnicity_code",
+    "title": "Missing valid Patient extension ethnicity code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Patient.extension:ethnicity contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Patient\\.extension:ethnicity(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Patient\\.extension:ethnicity|The code .*? is not valid in the value set.*Patient\\.extension:ethnicity)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_patient_extension_ethnicity_code",
+    "title": "Missing active Patient extension ethnicity code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Patient.extension:ethnicity contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Patient\\.extension:ethnicity(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Patient\\.extension:ethnicity|Code .*?in .*?is (retired|inactive|deprecated).*Patient\\.extension:ethnicity)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_patient_extension_genderidentity_code",
+    "title": "Missing valid Patient extension genderIdentity code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Patient.extension:genderIdentity contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Patient\\.extension:genderIdentity(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Patient\\.extension:genderIdentity|The code .*? is not valid in the value set.*Patient\\.extension:genderIdentity)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_patient_extension_genderidentity_code",
+    "title": "Missing active Patient extension genderIdentity code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Patient.extension:genderIdentity contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Patient\\.extension:genderIdentity(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Patient\\.extension:genderIdentity|Code .*?in .*?is (retired|inactive|deprecated).*Patient\\.extension:genderIdentity)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_patient_extension_race_code",
+    "title": "Missing valid Patient extension race code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Patient.extension:race contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Patient\\.extension:race(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Patient\\.extension:race|The code .*? is not valid in the value set.*Patient\\.extension:race)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_patient_extension_race_code",
+    "title": "Missing active Patient extension race code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Patient.extension:race contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Patient\\.extension:race(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Patient\\.extension:race|Code .*?in .*?is (retired|inactive|deprecated).*Patient\\.extension:race)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_patient_extension_sex_code",
+    "title": "Missing valid Patient extension sex code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Patient.extension:sex contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Patient\\.extension:sex(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Patient\\.extension:sex|The code .*? is not valid in the value set.*Patient\\.extension:sex)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_patient_extension_sex_code",
+    "title": "Missing active Patient extension sex code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Patient.extension:sex contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Patient\\.extension:sex(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Patient\\.extension:sex|Code .*?in .*?is (retired|inactive|deprecated).*Patient\\.extension:sex)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_patient_extension_tribalaffiliation_code",
+    "title": "Missing valid Patient extension tribalAffiliation code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Patient.extension:tribalAffiliation contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Patient\\.extension:tribalAffiliation(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Patient\\.extension:tribalAffiliation|The code .*? is not valid in the value set.*Patient\\.extension:tribalAffiliation)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_patient_extension_tribalaffiliation_code",
+    "title": "Missing active Patient extension tribalAffiliation code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Patient.extension:tribalAffiliation contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Patient\\.extension:tribalAffiliation(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Patient\\.extension:tribalAffiliation|Code .*?in .*?is (retired|inactive|deprecated).*Patient\\.extension:tribalAffiliation)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_patient_gender_code",
+    "title": "Missing valid Patient gender code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Patient.gender contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Patient\\.gender(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Patient\\.gender|The code .*? is not valid in the value set.*Patient\\.gender)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_patient_gender_code",
+    "title": "Missing active Patient gender code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Patient.gender contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Patient\\.gender(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Patient\\.gender|Code .*?in .*?is (retired|inactive|deprecated).*Patient\\.gender)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_patient_gender_element",
+    "title": "Missing Patient gender element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Patient.gender element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Patient\\.gender: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_patient_address_state_code",
+    "title": "Missing valid Patient address state code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Patient.address.state contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Patient\\.address\\.state(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Patient\\.address\\.state|The code .*? is not valid in the value set.*Patient\\.address\\.state)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_patient_contact_relationship_code",
+    "title": "Missing valid Patient contact relationship code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Patient.address.state contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'Patient Contact Relationship ' \\(http://hl7\\.org/fhir/ValueSet/patient-contactrelationship\\|[^)]+\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(codes = .+\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_patient_address_state_code",
+    "title": "Missing active Patient address state code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Patient.address.state contains a code that is no longer active (retired/deprecated). An active code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Patient\\.address\\.state(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Patient\\.address\\.state|Code .*?in .*?is (retired|inactive|deprecated).*Patient\\.address\\.state)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_patient_address_element",
+    "title": "Missing Patient address element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Patient.address element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Patient\\.address: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_encounter_class_type_code",
+    "title": "Missing Encounter Class Type Code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Encounter.class or Encounter.type code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Encounter\\.(class|type)(\\.coding)?: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_servicerequest_occurrence_repeat_date_range",
+    "title": "Missing Valid ServiceRequest Occurrence Repeat Date Range",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "ServiceRequest.occurrenceTiming.repeat boundsPeriod is missing or invalid. A valid date range is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "ServiceRequest\\.occurrence(Timing)?(\\.repeat)?(\\.bounds[A-Za-z]+)?.*(minimum required = 1, but only found 0|is not a valid Period|date range)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "duplicate_fhir_id_found",
+    "title": "Duplicate FHIR ID Found",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "More than one resource in the bundle shares the same FHIR id. Each resource id must be unique within a bundle. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Duplicate (resource|FHIR) id|same id .*? more than once|id .*? is not unique)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "invalid_value_for_positive_integer",
+    "title": "Invalid Value for Positive Integer",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "A field typed as positiveInt was given a value that is not a positive integer (must be >= 1). Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(positiveInt|positive integer).*(not.*valid|must be|invalid value)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_numerator_or_denominator_for_ratio",
+    "title": "Missing Numerator or Denominator for Ratio",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "A Ratio data type was provided without both a numerator and a denominator. Both are required. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Ratio.*(numerator|denominator).*(minimum required = 1, but only found 0|is required|missing)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "invalid_period_for_date_range",
+    "title": "Invalid Period for Date Range",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "A Period element has a start date that is after its end date, or is otherwise invalid. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Period\\.start.*after.*Period\\.end|start date.*(after|later than).*end date|invalid Period)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "illegal_character_in_fhir_data",
+    "title": "Illegal Character in FHIR Data",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "An illegal or non-permitted character was found in the data (e.g., control characters).",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(illegal character|invalid character|contains.*control character|non-printable character)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "invalid_format_for_date_and_time",
+    "title": "Invalid Format for Date & Time",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "A date, dateTime, or instant value was not in a valid FHIR format. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(not a valid (date|dateTime|instant|time)|invalid (date|dateTime|instant|time) format|does not match (the )?(regex|pattern).*(date|dateTime|instant|time))"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "unreasonable_unit_of_time",
+    "title": "Unreasonable Unit of Time",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "A unit of time appears unreasonable for the context (e.g., dosing in years). Verify the value in the EHR.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(unit of time.*unreasonable|unreasonable unit of time|time unit.*not reasonable)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_patient_full_name_element",
+    "title": "Missing Patient Full Name Element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Patient.name is missing or does not include both given and family components. A full name is required for reporting to NHSN. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Patient\\.name(\\.(given|family))?: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_observation_encounter_element",
+    "title": "Missing Observation Encounter element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Observation.encounter.reference is required but was not provided. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Observation\\.encounter\\.reference: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_observation_effective_datetime_element",
+    "title": "Missing Observation Effective DateTime Element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Observation.effective[x] is required but was not provided. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Observation\\.effective(\\[x\\]|DateTime|Period)?: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_annotation_text_element",
+    "title": "Missing Annotation Text Element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "An Annotation was provided without its required text element. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Annotation\\.text: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_device_type_element",
+    "title": "Missing Device Type Element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Device.type is required for reporting to NHSN but was not provided. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Device\\.type: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_encounter_identifier_system_element",
+    "title": "Missing Encounter Identifier System Element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Encounter.identifier.system is required to scope the identifier value but was not provided. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Encounter\\.identifier\\.system: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_coverage_class_type_code",
+    "title": "Missing valid Coverage class type code",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Coverage.class.type contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Coverage\\.class\\.type(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Coverage\\.class\\.type|The code .*? is not valid in the value set.*Coverage\\.class\\.type)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_active_coverage_class_type_code",
+    "title": "Missing active Coverage class type code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Coverage.class.type contains an inactive code that is no longer valid in the bound value set. Update the class type to use a currently active code. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Coverage\\.class\\.type(\\.coding(\\.code)?)?: .*(is not active|is retired|is deprecated|status.*?(retired|inactive|deprecated))|The code .*?is (valid but )?not active.*Coverage\\.class\\.type|Code .*?in .*?is (retired|inactive|deprecated).*Coverage\\.class\\.type)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_coverage_class_type_element",
+    "title": "Missing Coverage class type element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Coverage.class.type element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Coverage\\.class\\.type: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_location_physicaltype_code",
+    "title": "Missing valid Location physicalType code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Location.physicalType contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "(Location\\.physicalType(\\.coding(\\.code)?)?: .*(not in the value set|None of the codes provided|not a valid code|is not valid in the value set)|None of the codes provided are in the value set.*Location\\.physicalType|The code .*? is not valid in the value set.*Location\\.physicalType)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_encounter_location_period_element",
+    "title": "Missing Encounter Location period element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "NHSN requires Encounter location period to be present and overlapping the measure reporting period. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Encounter\\.location\\.period: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_specimen_collection_bodysite_element",
+    "title": "Missing Specimen collection bodySite element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Specimen.collection.bodySite is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Specimen\\.collection\\.bodySite: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "element_does_not_match_known_slice",
+    "title": "Element Does Not Match Known Slice",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "An element in a resource does not match any known slice defined in an ACH monthly profile. Ensure the element conforms to one of the defined slices in the profile (e.g., correct coding system, code, or structure). If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "This element does not match any known slice defined in the profile http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/[A-Za-z0-9\\-]+\\|[^)\\s]+"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_medicationrequest_encounter_element",
+    "title": "Missing MedicationRequest Encounter element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "MedicationRequest.encounter.reference is required but was not provided. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "MedicationRequest\\.encounter\\.reference: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_procedure_encounter_element",
+    "title": "Missing Procedure Encounter element",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Procedure.encounter.reference is required but was not provided. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Procedure\\.encounter\\.reference: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_location_address_state_code",
+    "title": "Missing valid Location address state code",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Location.address.state contains a value that is not a valid USPS two-letter state code. A valid code from the USPS Two Letter Alphabetic Codes value set is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The value provided \\('[^']*'\\) is not in the value set 'USPS Two Letter Alphabetic Codes' \\(http://hl7\\.org/fhir/us/core/ValueSet/us-core-usps-state\\|[^)]+\\), and a code should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(error message = Unknown code '[^']*' for in-memory expansion of ValueSet 'http://hl7\\.org/fhir/us/core/ValueSet/us-core-usps-state'\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_medication_form_code",
+    "title": "Missing valid Medication form code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Medication.form contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'SNOMED CT Form Codes' \\(http://hl7\\.org/fhir/ValueSet/medication-form-codes\\|[^)]+\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(codes = .+\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "ucum_code_annotation_mismatch",
+    "title": "UCUM Code Annotation Mismatch",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "A UCUM code contains a human-readable annotation (e.g., {tbl}) that is ignored when comparing units, and the corresponding Quantity.unit value does not contain that annotation. This is a best-practice notice and does not impact the submission pipeline. Verify the unit and annotation in the EHR if data accuracy review is desired.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "UCUM Codes that contain human readable annotations like \\{[^}]+\\} can be misleading \\(e\\.g\\. they are ignored when comparing units\\)\\. Best Practice is not to depend on annotations in the UCUM code, so this usage should be checked, and the Quantity\\.unit '[^']*' SHOULD contain the annotation \\(it does not\\)"
           }
         ],
         "andOperator": false
