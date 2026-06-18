@@ -40,25 +40,22 @@
     "title": "Unknown Extension",
     "severity": "INFORMATION",
     "acceptable": true,
+    "suppress": true,
     "guidance": "Internal: Systems are allowed to include extensions (additional data). Extensions that do not modify the meaning of the data (modifierExtensions) can be safely ignored. This is not a modifierExtension.",
     "ruleSets": [
       {
         "rules": [
           {
             "field": "DETAILS_TEXT",
+            "regex": "^Unknown extension https?://"
+          },
+          {
+            "field": "DETAILS_TEXT",
             "regex": "^The extension .* is unknown, and not allowed here$"
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Unknown extension https?://(?:fhir-ehr\\.cerner\\.com|electronichealth\\.se|open\\.epic\\.com|hl7\\.org/fhir/us/core|hl7\\.org/fhir/5\\.0/StructureDefinition/extension|nictiz\\.nl)/.*"
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "Extension url 'https?://hl7\\.org/fhir/5\\.0/StructureDefinition/extension.*' is not valid.*|Unknown extension http://terminology\\.hl7\\.org/CodeSystem/data-absent-reason"
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "Unknown extension http://hl7\\.org/fhir/[0-9]+\\.[0-9]+/StructureDefinition/extension-[A-Za-z]+\\.[A-Za-z]+"
+            "regex": "Extension url 'https?://.*' is not valid"
           }
         ],
         "andOperator": false
