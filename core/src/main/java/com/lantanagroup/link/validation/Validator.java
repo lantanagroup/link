@@ -470,6 +470,10 @@ public class Validator {
         }
       }
 
+      if (I18nConstants.DETAILS_FOR__MATCHING_AGAINST_PROFILE_.equals(message.getMessageId())) {
+        continue;
+      }
+
       OperationOutcome.IssueType issueCode = getIssueCode(message.getMessageId());
 
       if (issueCode == OperationOutcome.IssueType.NULL) {
