@@ -337,7 +337,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "^(?:Unknown Code System '.*'|CodeSystem is unknown and can't be validated)$"
+            "regex": "^(?:Unknown Code System '.*'|CodeSystem is unknown and can't be validated(?:: .+)?)$"
           },
           {
             "field": "DETAILS_TEXT",
