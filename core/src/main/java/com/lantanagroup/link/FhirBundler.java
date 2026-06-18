@@ -572,13 +572,21 @@ public class FhirBundler {
     individualMeasureReport.getContained().stream()
             .filter(c -> c.hasId() && c.getIdElement().getIdPart().startsWith("LCR-"))
             .forEach(c -> {
-              // Remove the LCR- prefix added by CQL
-              c.setId(c.getIdElement().getIdPart().substring(4));
+              String oldId = c.getIdElement().getIdPart();
+              String newId = oldId.substring(4); // Remove the LCR- prefix added by CQL
+              c.setId(newId);
 
-              // Update references to the evaluated resource to point to the contained reference (for validation purposes)
+              // Update ALL references (including in extensions) from #LCR-oldId to #newId
+              String oldRef = "#" + oldId;
+              String newRef = "#" + newId;
+              FhirScanner.findReferences(individualMeasureReport).stream()
+                      .filter(r -> r.hasReference() && r.getReference().equals(oldRef))
+                      .forEach(r -> r.setReference(newRef));
+
+              // Update evaluatedResource references from ResourceType/newId to contained #newId
               individualMeasureReport.getEvaluatedResource().stream()
-                      .filter(er -> er.hasReference() && er.getReference().equals(c.getResourceType().toString() + "/" + c.getIdElement().getIdPart()))
-                      .forEach(er -> er.setReference("#" + c.getIdElement().getIdPart()));
+                      .filter(er -> er.hasReference() && er.getReference().equals(c.getResourceType().toString() + "/" + newId))
+                      .forEach(er -> er.setReference(newRef));
             });
 
     bundle.addEntry().setResource(individualMeasureReport);
