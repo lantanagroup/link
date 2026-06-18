@@ -65,7 +65,6 @@ public class Validator {
       case I18nConstants.MEASURE_MR_GRP_POP_NO_SUBJECTS:
       case I18nConstants.MEASURE_MR_GRP_POP_UNK_CODE:
       case I18nConstants.MEASURE_MR_GRP_UNK_CODE:
-//      case I18nConstants.MEASURE_MR_GRPST_POP_UNK_CODE:
       case I18nConstants.MEASURE_MR_M_SCORING_UNK:
       case I18nConstants.MEASURE_MR_SCORE_PROHIBITED_MS:
       case I18nConstants.MEASURE_MR_SCORE_PROHIBITED_RT:
@@ -434,6 +433,7 @@ public class Validator {
     validator.registerValidatorModule(fhirInstanceValidator);
 
     validator.setExecutorService(ForkJoinPool.commonPool());
+    // Concurrent validation is disabled to preserve deterministic issue ordering in the OperationOutcome.
     validator.setConcurrentBundleValidation(false);
 
     return validator;
