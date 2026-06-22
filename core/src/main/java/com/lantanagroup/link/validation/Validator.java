@@ -9,6 +9,7 @@ import org.hl7.fhir.common.hapi.validation.support.*;
 import org.hl7.fhir.common.hapi.validation.validator.FhirInstanceValidator;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r5.utils.validation.constants.BestPracticeWarningLevel;
 import org.hl7.fhir.utilities.i18n.I18nConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -431,6 +432,7 @@ public class Validator {
     FhirInstanceValidator fhirInstanceValidator = new FhirInstanceValidator(validationSupportChain);
     fhirInstanceValidator.setAnyExtensionsAllowed(true);
     fhirInstanceValidator.setAssumeValidRestReferences(true);
+    fhirInstanceValidator.setBestPracticeWarningLevel(BestPracticeWarningLevel.Error);
     validator.registerValidatorModule(fhirInstanceValidator);
 
     validator.setExecutorService(ForkJoinPool.commonPool());

@@ -56,23 +56,13 @@ public class ValidationService {
       // for when making requests to the REST API.
       outcome = validator.validate(bundle, OperationOutcome.IssueSeverity.INFORMATION, measureDefinitions);
 
-      long sliceCountBefore = outcome.getIssue().stream()
-              .filter(i -> i.getDetails().getText() != null && i.getDetails().getText().contains("does not match any known slice"))
-              .count();
-      logger.info("Slice issues before suppress: {}", sliceCountBefore);
-
-//      // Remove issues that match a suppressed category before persisting or returning
-//      outcome.getIssue().removeIf(ooIssue -> {
-//        ValidationCategorizer.Issue issue = new ValidationCategorizer.Issue(ooIssue);
-//        return categorizer.getCategories().stream()
-//                .filter(c -> Boolean.TRUE.equals(c.getSuppress()))
-//                .anyMatch(c -> categorizer.isMatch((RuleBasedValidationCategory) c, issue));
-//      });
-
-      long sliceCountAfter = outcome.getIssue().stream()
-              .filter(i -> i.getDetails().getText() != null && i.getDetails().getText().contains("does not match any known slice"))
-              .count();
-      logger.info("Slice issues after suppress: {}", sliceCountAfter);
+      // Remove issues that match a suppressed category before persisting or returning
+      outcome.getIssue().removeIf(ooIssue -> {
+        ValidationCategorizer.Issue issue = new ValidationCategorizer.Issue(ooIssue);
+        return categorizer.getCategories().stream()
+                .filter(c -> Boolean.TRUE.equals(c.getAcceptable()))
+                .anyMatch(c -> categorizer.isMatch((RuleBasedValidationCategory) c, issue));
+      });
 
       tenantService.deleteValidationResults(report.getId());
 

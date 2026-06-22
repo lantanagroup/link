@@ -4485,5 +4485,23 @@
         "andOperator": false
       }
     ]
+  },
+  {
+    "id": "details_profile_matching",
+    "title": "Details for matching against profile",
+    "severity": "INFORMATION",
+    "acceptable": true,
+    "suppress": true,
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^Details for \\S+ matching against profile \\S+"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
   }
 ]
