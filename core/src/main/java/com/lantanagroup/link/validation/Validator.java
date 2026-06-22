@@ -430,6 +430,7 @@ public class Validator {
     // CachingValidationSupport cachingValidationSupport = new CachingValidationSupport(validationSupportChain);
     FhirInstanceValidator fhirInstanceValidator = new FhirInstanceValidator(validationSupportChain);
     fhirInstanceValidator.setAnyExtensionsAllowed(true);
+    fhirInstanceValidator.setAssumeValidRestReferences(true);
     validator.registerValidatorModule(fhirInstanceValidator);
 
     validator.setExecutorService(ForkJoinPool.commonPool());
