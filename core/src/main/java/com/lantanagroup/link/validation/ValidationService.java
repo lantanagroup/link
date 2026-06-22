@@ -60,7 +60,7 @@ public class ValidationService {
       outcome.getIssue().removeIf(ooIssue -> {
         ValidationCategorizer.Issue issue = new ValidationCategorizer.Issue(ooIssue);
         return categorizer.getCategories().stream()
-                .filter(c -> Boolean.TRUE.equals(c.getAcceptable()))
+                .filter(c -> Boolean.TRUE.equals(c.getSuppress()))
                 .anyMatch(c -> categorizer.isMatch((RuleBasedValidationCategory) c, issue));
       });
 
