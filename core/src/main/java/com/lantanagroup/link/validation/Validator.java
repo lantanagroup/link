@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
+import java.util.stream.Collectors;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -43,7 +44,8 @@ public class Validator {
   private static OperationOutcome.IssueType getIssueCode(String messageId) {
     if (messageId == null) {
       return OperationOutcome.IssueType.NULL;
-    } else if (messageId.startsWith("Rule ")) {
+    } else if (messageId.startsWith("Rule ") || messageId.matches("[a-z]+-\\d+")) {
+      // "Rule X" = FHIRPath invariant; "xyz-N" = named constraint key (e.g. dom-6, obs-7)
       return OperationOutcome.IssueType.INVARIANT;
     }
 
@@ -452,7 +454,10 @@ public class Validator {
     return outcome;
   }
 
-  private void validateResource(FhirValidator validator, Resource resource, OperationOutcome outcome, OperationOutcome.IssueSeverity severity) {
+  private void validateResource(FhirValidator validator, Resource resource, OperationOutcome outcome,
+                                OperationOutcome.IssueSeverity severity,
+                                List<RuleBasedValidationCategory> suppressedCategories,
+                                ValidationCategorizer categorizer) {
     ValidationResult result = validator.validateWithResult(resource, newR4ValidationOptions());
 
     for (SingleValidationMessage message : result.getMessages()) {
@@ -480,13 +485,22 @@ public class Validator {
         issueCode = OperationOutcome.IssueType.INVALID;
       }
 
-      outcome.addIssue()
+      OperationOutcome.OperationOutcomeIssueComponent issue = new OperationOutcome.OperationOutcomeIssueComponent()
               .setSeverity(messageSeverity)
               .setCode(issueCode)
               .setDetails(new CodeableConcept().setText(message.getMessage()))
               .setExpression(List.of(
                       new StringType(message.getLocationString()),
                       new StringType(message.getLocationLine() + ":" + message.getLocationCol())));
+
+      if (!suppressedCategories.isEmpty()) {
+        ValidationCategorizer.Issue categorizerIssue = new ValidationCategorizer.Issue(issue);
+        if (suppressedCategories.stream().anyMatch(c -> categorizer.isMatch(c, categorizerIssue))) {
+          continue;
+        }
+      }
+
+      outcome.addIssue(issue);
     }
   }
 
@@ -542,13 +556,19 @@ public class Validator {
 
     logger.debug("Validating {}", resource.getResourceType().toString().toLowerCase());
 
+    ValidationCategorizer categorizer = new ValidationCategorizer();
+    categorizer.loadFromResources();
+    List<RuleBasedValidationCategory> suppressedCategories = categorizer.getCategories().stream()
+            .filter(c -> Boolean.TRUE.equals(c.getSuppress()))
+            .collect(Collectors.toList());
+
     OperationOutcome outcome = new OperationOutcome();
     Date start = new Date();
 
     //noinspection unused
     outcome.setId(UUID.randomUUID().toString());
 
-    this.validateResource(validator, resource, outcome, severity);
+    this.validateResource(validator, resource, outcome, severity, suppressedCategories, categorizer);
     this.improveIssueExpressions(resource, outcome);
 
     Date end = new Date();
