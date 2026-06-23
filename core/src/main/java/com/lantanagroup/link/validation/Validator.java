@@ -428,16 +428,15 @@ public class Validator {
             new SnapshotGeneratingValidationSupport(fhirContext),
             new InMemoryTerminologyServerValidationSupport(fhirContext),
             new CommonCodeSystemsTerminologyService(fhirContext));
-    // CachingValidationSupport cachingValidationSupport = new CachingValidationSupport(validationSupportChain);
-    FhirInstanceValidator fhirInstanceValidator = new FhirInstanceValidator(validationSupportChain);
+    CachingValidationSupport cachingValidationSupport = new CachingValidationSupport(validationSupportChain);
+    FhirInstanceValidator fhirInstanceValidator = new FhirInstanceValidator(cachingValidationSupport);
     fhirInstanceValidator.setAnyExtensionsAllowed(true);
     fhirInstanceValidator.setAssumeValidRestReferences(true);
     fhirInstanceValidator.setBestPracticeWarningLevel(BestPracticeWarningLevel.Error);
     validator.registerValidatorModule(fhirInstanceValidator);
 
     validator.setExecutorService(ForkJoinPool.commonPool());
-    // Concurrent validation is disabled to preserve deterministic issue ordering in the OperationOutcome.
-    validator.setConcurrentBundleValidation(false);
+    validator.setConcurrentBundleValidation(true);
 
     return validator;
   }
