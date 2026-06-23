@@ -569,6 +569,7 @@ public class FhirBundler {
     individualMeasureReport.getMeta().addProfile(Constants.IndividualMeasureReportProfileUrl);
 
     // Clean up the contained resources within the measure report
+    List<Reference> allReferences = FhirScanner.findReferences(individualMeasureReport);
     individualMeasureReport.getContained().stream()
             .filter(c -> c.hasId() && c.getIdElement().getIdPart().startsWith("LCR-"))
             .forEach(c -> {
@@ -579,7 +580,7 @@ public class FhirBundler {
               // Update ALL references (including in extensions) from #LCR-oldId to #newId
               String oldRef = "#" + oldId;
               String newRef = "#" + newId;
-              FhirScanner.findReferences(individualMeasureReport).stream()
+              allReferences.stream()
                       .filter(r -> r.hasReference() && r.getReference().equals(oldRef))
                       .forEach(r -> r.setReference(newRef));
 
