@@ -28,7 +28,6 @@ import com.lantanagroup.link.time.StopwatchManager;
 import com.lantanagroup.link.validation.ValidationService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Setter;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
@@ -492,7 +491,7 @@ public class ReportController extends BaseController {
       logger.info("Beginning initial measure evaluation");
       this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.INITIAL, false);
 
-      if (config.isSkipQuery() || skipQuery || CollectionUtils.isEmpty(reportContext.getQueryPlan().getSupplemental())) {
+      if (config.isSkipQuery() || skipQuery || reportContext.getQueryPlan().getSupplemental() == null || reportContext.getQueryPlan().getSupplemental().isEmpty()) {
         logger.info("Skipping supplemental query and store");
         logger.info("Beginning aggregation");
         this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL, true);

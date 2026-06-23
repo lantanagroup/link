@@ -58,6 +58,8 @@ public class ValidationController extends BaseController {
     Validator validator = new Validator();
     OperationOutcome outcome = validator.validate(bundle, severity);
 
+    suppressIssues(outcome);
+
     Device found = bundle.getEntry().stream()
             .filter(e -> e.getResource() instanceof Device)
             .map(e -> (Device) e.getResource())
@@ -103,6 +105,9 @@ public class ValidationController extends BaseController {
   public String validateSummary(@RequestBody Bundle bundle, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity) {
     Validator validator = new Validator();
     OperationOutcome outcome = validator.validate(bundle, severity);
+
+    suppressIssues(outcome);
+
     return this.getValidationSummary(outcome);
   }
 
@@ -351,6 +356,17 @@ public class ValidationController extends BaseController {
     tenantService.saveReport(report);
 
     return outcome;
+  }
+
+  private static void suppressIssues(OperationOutcome outcome) {
+    ValidationCategorizer categorizer = new ValidationCategorizer();
+    categorizer.loadFromResources();
+    outcome.getIssue().removeIf(ooIssue -> {
+      ValidationCategorizer.Issue issue = new ValidationCategorizer.Issue(ooIssue);
+      return categorizer.getCategories().stream()
+              .filter(c -> Boolean.TRUE.equals(c.getSuppress()))
+              .anyMatch(c -> categorizer.isMatch((RuleBasedValidationCategory) c, issue));
+    });
   }
 
   private String getValidationSummary(OperationOutcome outcome) {

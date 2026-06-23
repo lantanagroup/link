@@ -9,6 +9,7 @@ import org.hl7.fhir.common.hapi.validation.support.*;
 import org.hl7.fhir.common.hapi.validation.validator.FhirInstanceValidator;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r5.utils.validation.constants.BestPracticeWarningLevel;
 import org.hl7.fhir.utilities.i18n.I18nConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,14 +66,13 @@ public class Validator {
       case I18nConstants.MEASURE_MR_GRP_POP_NO_SUBJECTS:
       case I18nConstants.MEASURE_MR_GRP_POP_UNK_CODE:
       case I18nConstants.MEASURE_MR_GRP_UNK_CODE:
-      case I18nConstants.MEASURE_MR_GRPST_POP_UNK_CODE:
       case I18nConstants.MEASURE_MR_M_SCORING_UNK:
       case I18nConstants.MEASURE_MR_SCORE_PROHIBITED_MS:
       case I18nConstants.MEASURE_MR_SCORE_PROHIBITED_RT:
       case I18nConstants.MEASURE_MR_SCORE_UNIT_PROHIBITED:
       case I18nConstants.META_RES_SECURITY_DUPLICATE:
       case I18nConstants.MULTIPLE_LOGICAL_MODELS:
-      case I18nConstants.TYPE_SPECIFIC_CHECKS_DT_QTY_NO_ANNOTATIONS:
+//      case I18nConstants.TYPE_SPECIFIC_CHECKS_DT_QTY_NO_ANNOTATIONS:
       case I18nConstants.VALIDATION_VAL_PROFILE_DEPENDS_NOT_RESOLVED:
       case I18nConstants.VALIDATION_VAL_STATUS_INCONSISTENT:
       case I18nConstants.VALIDATION_VAL_STATUS_INCONSISTENT_HINT:
@@ -84,9 +84,8 @@ public class Validator {
       case I18nConstants.TERMINOLOGY_TX_BINDING_MISSING2:
       case I18nConstants.TERMINOLOGY_TX_BINDING_NOSERVER:
       case I18nConstants.TERMINOLOGY_TX_BINDING_NOSOURCE:
-      case I18nConstants.TERMINOLOGY_TX_BINDING_NOSOURCE2:
-      case I18nConstants.TERMINOLOGY_TX_CODE_NOTVALID:
-      case I18nConstants.TERMINOLOGY_TX_CODE_UNKNOWN:
+//      case I18nConstants.TERMINOLOGY_TX_CODE_NOTVALID:
+//      case I18nConstants.TERMINOLOGY_TX_CODE_UNKNOWN:
       case I18nConstants.TERMINOLOGY_TX_CODE_VALUESET:
       case I18nConstants.TERMINOLOGY_TX_CODE_VALUESET_EXT:
       case I18nConstants.Terminology_TX_Code_ValueSet_MISSING:
@@ -111,7 +110,7 @@ public class Validator {
       case I18nConstants.TERMINOLOGY_TX_NOVALID_13:
       case I18nConstants.TERMINOLOGY_TX_NOVALID_14:
       case I18nConstants.TERMINOLOGY_TX_NOVALID_15:
-      case I18nConstants.TERMINOLOGY_TX_NOVALID_15A:
+//      case I18nConstants.TERMINOLOGY_TX_NOVALID_15A:
       case I18nConstants.TERMINOLOGY_TX_NOVALID_16:
       case I18nConstants.TERMINOLOGY_TX_NOVALID_17:
       case I18nConstants.TERMINOLOGY_TX_NOVALID_18:
@@ -156,7 +155,7 @@ public class Validator {
       case I18nConstants.ALL_OBSERVATIONS_SHOULD_HAVE_A_PERFORMER:
       case I18nConstants.ALL_OBSERVATIONS_SHOULD_HAVE_A_SUBJECT:
       case I18nConstants.ALL_OBSERVATIONS_SHOULD_HAVE_AN_EFFECTIVEDATETIME_OR_AN_EFFECTIVEPERIOD:
-      case I18nConstants.BUNDLE_BUNDLE_ENTRY_MULTIPLE_PROFILES:
+//      case I18nConstants.BUNDLE_BUNDLE_ENTRY_MULTIPLE_PROFILES:
       case I18nConstants.BUNDLE_BUNDLE_ENTRY_NOPROFILE_EXPL:
       case I18nConstants.BUNDLE_BUNDLE_ENTRY_NOPROFILE_TYPE:
       case I18nConstants.CAPABALITYSTATEMENT_CS_SP_WRONGTYPE:
@@ -191,9 +190,9 @@ public class Validator {
       case I18nConstants.SD_TYPE_NOT_MATCH_NS:
       case I18nConstants.SECURITY_STRING_CONTENT_ERROR:
       case I18nConstants.SECURITY_STRING_CONTENT_WARNING:
-      case I18nConstants.STATUS_CODE_HINT:
-      case I18nConstants.STATUS_CODE_HINT_CODE:
-      case I18nConstants.STATUS_CODE_WARNING:
+//      case I18nConstants.STATUS_CODE_HINT:
+//      case I18nConstants.STATUS_CODE_HINT_CODE:
+//      case I18nConstants.STATUS_CODE_WARNING:
       case I18nConstants.STATUS_CODE_WARNING_CODE:
       case I18nConstants.TYPE_SPECIFIC_CHECKS_CANONICAL_ABSOLUTE:
       case I18nConstants.TYPE_SPECIFIC_CHECKS_CANONICAL_CONTAINED:
@@ -236,7 +235,7 @@ public class Validator {
       case I18nConstants.TYPE_SPECIFIC_CHECKS_DT_QTY_MAX_MIN_NO_CONVERT:
       case I18nConstants.TYPE_SPECIFIC_CHECKS_DT_QTY_MAX_MIN_NO_SYSTEM:
       case I18nConstants.TYPE_SPECIFIC_CHECKS_DT_QTY_MAX_MIN_NO_VALUE:
-      case I18nConstants.TYPE_SPECIFIC_CHECKS_DT_QTY_MAX_NO_QTY:
+//      case I18nConstants.TYPE_SPECIFIC_CHECKS_DT_QTY_MAX_NO_QTY:
       case I18nConstants.TYPE_SPECIFIC_CHECKS_DT_QTY_MAX_NO_UCUM_SVC:
       case I18nConstants.TYPE_SPECIFIC_CHECKS_DT_QTY_MAX_SYSTEM_MISMATCH:
       case I18nConstants.TYPE_SPECIFIC_CHECKS_DT_QTY_MAX_VALUE_NO_CODE:
@@ -249,7 +248,7 @@ public class Validator {
       case I18nConstants.TYPE_SPECIFIC_CHECKS_DT_QTY_MIN_MIN_NO_CONVERT:
       case I18nConstants.TYPE_SPECIFIC_CHECKS_DT_QTY_MIN_MIN_NO_SYSTEM:
       case I18nConstants.TYPE_SPECIFIC_CHECKS_DT_QTY_MIN_MIN_NO_VALUE:
-      case I18nConstants.TYPE_SPECIFIC_CHECKS_DT_QTY_MIN_NO_QTY:
+//      case I18nConstants.TYPE_SPECIFIC_CHECKS_DT_QTY_MIN_NO_QTY:
       case I18nConstants.TYPE_SPECIFIC_CHECKS_DT_QTY_MIN_NO_UCUM_SVC:
       case I18nConstants.TYPE_SPECIFIC_CHECKS_DT_QTY_MIN_SYSTEM_MISMATCH:
       case I18nConstants.TYPE_SPECIFIC_CHECKS_DT_QTY_MIN_VALUE_NO_CODE:
@@ -371,7 +370,7 @@ public class Validator {
       case I18nConstants.EXTENSION_CONTEXT_UNABLE_TO_CHECK_PROFILE:
       case I18nConstants.EXTENSION_CONTEXT_UNABLE_TO_FIND_PROFILE:
       case I18nConstants.TERMINOLOGY_TX_SYSTEM_NOT_USABLE:
-      case I18nConstants.TERMINOLOGY_TX_SYSTEM_NOTKNOWN:
+//      case I18nConstants.TERMINOLOGY_TX_SYSTEM_NOTKNOWN:
         return OperationOutcome.IssueType.UNKNOWN;
       case I18nConstants._DT_FIXED_WRONG:
       case I18nConstants.BUNDLE_MSG_EVENT_COUNT:
@@ -412,6 +411,8 @@ public class Validator {
   private static FhirValidator initialize(List<Bundle> support) {
     FhirContext fhirContext = FhirContextProvider.getFhirContext();
     FhirValidator validator = fhirContext.newValidator();
+    validator.setValidateAgainstStandardSchema(false);
+    validator.setValidateAgainstStandardSchematron(false);
 
     MeasureDefinitionBasedValidationSupport measureDefinitionBasedValidationSupport =
             new MeasureDefinitionBasedValidationSupport(fhirContext);
@@ -427,28 +428,34 @@ public class Validator {
             new SnapshotGeneratingValidationSupport(fhirContext),
             new InMemoryTerminologyServerValidationSupport(fhirContext),
             new CommonCodeSystemsTerminologyService(fhirContext));
-    CachingValidationSupport cachingValidationSupport = new CachingValidationSupport(validationSupportChain);
-    IValidatorModule validatorModule = new FhirInstanceValidator(cachingValidationSupport);
-    validator.registerValidatorModule(validatorModule);
+    // CachingValidationSupport cachingValidationSupport = new CachingValidationSupport(validationSupportChain);
+    FhirInstanceValidator fhirInstanceValidator = new FhirInstanceValidator(validationSupportChain);
+    fhirInstanceValidator.setAnyExtensionsAllowed(true);
+    fhirInstanceValidator.setAssumeValidRestReferences(true);
+    fhirInstanceValidator.setBestPracticeWarningLevel(BestPracticeWarningLevel.Error);
+    validator.registerValidatorModule(fhirInstanceValidator);
 
     validator.setExecutorService(ForkJoinPool.commonPool());
-    validator.setConcurrentBundleValidation(true);
+    // Concurrent validation is disabled to preserve deterministic issue ordering in the OperationOutcome.
+    validator.setConcurrentBundleValidation(false);
 
     return validator;
+  }
+
+  private static ValidationOptions newR4ValidationOptions() {
+    return new ValidationOptions();
   }
 
   public OperationOutcome validateRaw(IBaseResource resource) {
     FhirValidator validator = initialize(List.of());
     OperationOutcome outcome = new OperationOutcome();
-    ValidationResult result = validator.validateWithResult(resource);
+    ValidationResult result = validator.validateWithResult(resource, newR4ValidationOptions());
     result.populateOperationOutcome(outcome);
     return outcome;
   }
 
   private void validateResource(FhirValidator validator, Resource resource, OperationOutcome outcome, OperationOutcome.IssueSeverity severity) {
-    ValidationOptions opts = new ValidationOptions();
-
-    ValidationResult result = validator.validateWithResult(resource, opts);
+    ValidationResult result = validator.validateWithResult(resource, newR4ValidationOptions());
 
     for (SingleValidationMessage message : result.getMessages()) {
       OperationOutcome.IssueSeverity messageSeverity = getIssueSeverity(message.getSeverity());

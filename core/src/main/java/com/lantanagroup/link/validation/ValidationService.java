@@ -56,6 +56,14 @@ public class ValidationService {
       // for when making requests to the REST API.
       outcome = validator.validate(bundle, OperationOutcome.IssueSeverity.INFORMATION, measureDefinitions);
 
+      // Remove issues that match a suppressed category before persisting or returning
+      outcome.getIssue().removeIf(ooIssue -> {
+        ValidationCategorizer.Issue issue = new ValidationCategorizer.Issue(ooIssue);
+        return categorizer.getCategories().stream()
+                .filter(c -> Boolean.TRUE.equals(c.getSuppress()))
+                .anyMatch(c -> categorizer.isMatch((RuleBasedValidationCategory) c, issue));
+      });
+
       tenantService.deleteValidationResults(report.getId());
 
       // In batches of 100 ...
