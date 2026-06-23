@@ -428,8 +428,7 @@ public class Validator {
             new SnapshotGeneratingValidationSupport(fhirContext),
             new InMemoryTerminologyServerValidationSupport(fhirContext),
             new CommonCodeSystemsTerminologyService(fhirContext));
-    CachingValidationSupport cachingValidationSupport = new CachingValidationSupport(validationSupportChain);
-    FhirInstanceValidator fhirInstanceValidator = new FhirInstanceValidator(cachingValidationSupport);
+    FhirInstanceValidator fhirInstanceValidator = new FhirInstanceValidator(validationSupportChain);
     fhirInstanceValidator.setAnyExtensionsAllowed(true);
     fhirInstanceValidator.setAssumeValidRestReferences(true);
     fhirInstanceValidator.setBestPracticeWarningLevel(BestPracticeWarningLevel.Error);
