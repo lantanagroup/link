@@ -4479,7 +4479,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "dom-6"
+            "regex": "narrative for robust management"
           }
         ],
         "andOperator": false

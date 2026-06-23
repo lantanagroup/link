@@ -433,7 +433,7 @@ public class Validator {
     FhirInstanceValidator fhirInstanceValidator = new FhirInstanceValidator(validationSupportChain);
     fhirInstanceValidator.setAnyExtensionsAllowed(true);
     fhirInstanceValidator.setAssumeValidRestReferences(true);
-    fhirInstanceValidator.setBestPracticeWarningLevel(BestPracticeWarningLevel.Error);
+    //fhirInstanceValidator.setBestPracticeWarningLevel(BestPracticeWarningLevel.Ignore);
     validator.registerValidatorModule(fhirInstanceValidator);
 
     validator.setExecutorService(ForkJoinPool.commonPool());
@@ -459,6 +459,13 @@ public class Validator {
                                 List<RuleBasedValidationCategory> suppressedCategories,
                                 ValidationCategorizer categorizer) {
     ValidationResult result = validator.validateWithResult(resource, newR4ValidationOptions());
+
+    Map<String, Long> messageIdCounts = result.getMessages().stream()
+            .collect(Collectors.groupingBy(m -> m.getMessageId() == null ? "null" : m.getMessageId(), Collectors.counting()));
+    messageIdCounts.entrySet().stream()
+            .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+            .limit(20)
+            .forEach(e -> logger.debug("Message ID '{}': {} occurrences", e.getKey(), e.getValue()));
 
     for (SingleValidationMessage message : result.getMessages()) {
       OperationOutcome.IssueSeverity messageSeverity = getIssueSeverity(message.getSeverity());
