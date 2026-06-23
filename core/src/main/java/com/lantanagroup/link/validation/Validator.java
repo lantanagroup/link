@@ -44,8 +44,8 @@ public class Validator {
   private static OperationOutcome.IssueType getIssueCode(String messageId) {
     if (messageId == null) {
       return OperationOutcome.IssueType.NULL;
-    } else if (messageId.startsWith("Rule ") || messageId.matches("[a-z]+-\\d+")) {
-      // "Rule X" = FHIRPath invariant; "xyz-N" = named constraint key (e.g. dom-6, obs-7)
+    } else if (messageId.startsWith("Rule ") || messageId.matches("[a-z]+-\\d+") || messageId.matches(".*#[a-z]+-\\d+")) {
+      // "Rule X" = FHIRPath invariant; "xyz-N" or "url#xyz-N" = named constraint key (e.g. dom-6, obs-7)
       return OperationOutcome.IssueType.INVARIANT;
     }
 
