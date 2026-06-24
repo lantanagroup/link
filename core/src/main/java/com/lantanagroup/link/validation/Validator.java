@@ -1,7 +1,10 @@
 package com.lantanagroup.link.validation;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.context.support.ConceptValidationOptions;
 import ca.uhn.fhir.context.support.DefaultProfileValidationSupport;
+import ca.uhn.fhir.context.support.IValidationSupport;
+import ca.uhn.fhir.context.support.ValidationSupportContext;
 import ca.uhn.fhir.validation.*;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
@@ -24,6 +27,43 @@ import java.util.regex.Pattern;
 
 public class Validator {
   protected static final Logger logger = LoggerFactory.getLogger(Validator.class);
+
+  /**
+   * Short-circuits terminology chain traversal for large external code systems that have no
+   * CodeSystem definitions loaded (LOINC, RxNorm, SNOMED, ICD-10). Without this, HAPI traverses
+   * the full ValidationSupportChain for every coded value, generating ~115k passthrough messages
+   * and significant CPU overhead. Remove or disable this support once the measure package includes
+   * proper ValueSet expansion elements that enable in-memory code validation.
+   */
+  private static class SkipTerminologyValidationSupport extends BaseValidationSupport {
+    private static final Set<String> SKIPPED_SYSTEMS = Set.of(
+            "http://loinc.org",
+            "http://www.nlm.nih.gov/research/umls/rxnorm",
+            "http://snomed.info/sct",
+            "http://hl7.org/fhir/sid/icd-10",
+            "http://hl7.org/fhir/sid/icd-10-cm",
+            "http://hl7.org/fhir/sid/icd-9-cm"
+    );
+
+    public SkipTerminologyValidationSupport(FhirContext theCtx) {
+      super(theCtx);
+    }
+
+    @Override
+    public boolean isCodeSystemSupported(ValidationSupportContext theValidationSupportContext, String theSystem) {
+      return SKIPPED_SYSTEMS.contains(theSystem);
+    }
+
+    @Override
+    public CodeValidationResult validateCode(ValidationSupportContext theValidationSupportContext,
+                                             ConceptValidationOptions theOptions,
+                                             String theCodeSystem, String theCode,
+                                             String theDisplay, String theValueSetUrl) {
+      // Return "ok" to claim the result and prevent further chain traversal.
+      // This is intentionally permissive until ValueSet expansions are available in the measure package.
+      return new CodeValidationResult().setCode(theCode);
+    }
+  }
 
   private volatile FhirValidator validator;
 
@@ -425,6 +465,7 @@ public class Validator {
             .filter(Objects::nonNull)
             .forEachOrdered(measureDefinitionBasedValidationSupport::addResource);
     ValidationSupportChain validationSupportChain = new ValidationSupportChain(
+            new SkipTerminologyValidationSupport(fhirContext),
             new DefaultProfileValidationSupport(fhirContext),
             ClasspathBasedValidationSupport.getInstance(),
             measureDefinitionBasedValidationSupport,
