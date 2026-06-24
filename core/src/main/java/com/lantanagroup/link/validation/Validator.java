@@ -6,6 +6,7 @@ import ca.uhn.fhir.validation.*;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
 import org.hl7.fhir.common.hapi.validation.support.*;
+import org.hl7.fhir.common.hapi.validation.validator.FhirDefaultPolicyAdvisor;
 import org.hl7.fhir.common.hapi.validation.validator.FhirInstanceValidator;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
@@ -434,6 +435,15 @@ public class Validator {
     fhirInstanceValidator.setAnyExtensionsAllowed(true);
     fhirInstanceValidator.setAssumeValidRestReferences(true);
     //fhirInstanceValidator.setBestPracticeWarningLevel(BestPracticeWarningLevel.Ignore);
+    // Workaround for HAPI 8.8.0+ regression (https://github.com/hapifhir/hapi-fhir/issues/7602):
+    // R5 bundle relative reference policy enforced in core 6.6+ causes false-positive reference errors.
+    // Suppress at the policy advisor level so resolution work is skipped entirely.
+    fhirInstanceValidator.setValidatorPolicyAdvisor(new FhirDefaultPolicyAdvisor() {
+      @Override
+      public boolean isSuppressMessageId(String theMessageId) {
+        return I18nConstants.REFERENCE_REF_NOTFOUND_BUNDLE.equals(theMessageId);
+      }
+    });
     validator.registerValidatorModule(fhirInstanceValidator);
 
     validator.setExecutorService(ForkJoinPool.commonPool());
