@@ -440,7 +440,7 @@ public class Validator {
     // Suppress at the policy advisor level so resolution work is skipped entirely.
     fhirInstanceValidator.setValidatorPolicyAdvisor(new FhirDefaultPolicyAdvisor() {
       @Override
-      public boolean isSuppressMessageId(String theMessageId) {
+      public boolean isSuppressMessageId(String theMessageId, String theMessageArgument) {
         return I18nConstants.REFERENCE_REF_NOTFOUND_BUNDLE.equals(theMessageId);
       }
     });
