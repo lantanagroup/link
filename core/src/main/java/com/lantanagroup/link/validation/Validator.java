@@ -500,7 +500,10 @@ public class Validator {
                       new StringType(message.getLocationString()),
                       new StringType(message.getLocationLine() + ":" + message.getLocationCol())));
 
-      // Suppress by message ID for high-volume messages introduced by HAPI version upgrades
+      // Workaround for HAPI 8.8.0+ regression (https://github.com/hapifhir/hapi-fhir/issues/7602):
+      // bundle-internal reference validation ignores configured policy and hardcodes CHECK_VALID,
+      // flooding output with reference-not-found and terminology passthrough messages.
+      // Fixed upstream in PR #7595 but not yet released in 8.10.0.
       if (I18nConstants.REFERENCE_REF_NOTFOUND_BUNDLE.equals(message.getMessageId())
               || I18nConstants.TERMINOLOGY_PASSTHROUGH_TX_MESSAGE.equals(message.getMessageId())) {
         continue;
