@@ -500,6 +500,12 @@ public class Validator {
                       new StringType(message.getLocationString()),
                       new StringType(message.getLocationLine() + ":" + message.getLocationCol())));
 
+      // Suppress by message ID for high-volume messages introduced by HAPI version upgrades
+      if (I18nConstants.REFERENCE_REF_NOTFOUND_BUNDLE.equals(message.getMessageId())
+              || I18nConstants.TERMINOLOGY_PASSTHROUGH_TX_MESSAGE.equals(message.getMessageId())) {
+        continue;
+      }
+
       if (!suppressedCategories.isEmpty()) {
         ValidationCategorizer.Issue categorizerIssue = new ValidationCategorizer.Issue(issue);
         if (suppressedCategories.stream().anyMatch(c -> categorizer.isMatch(c, categorizerIssue))) {
