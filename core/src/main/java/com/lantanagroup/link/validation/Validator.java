@@ -85,8 +85,8 @@ public class Validator {
   private static OperationOutcome.IssueType getIssueCode(String messageId) {
     if (messageId == null) {
       return OperationOutcome.IssueType.NULL;
-    } else if (messageId.startsWith("Rule ") || messageId.matches("[a-z]+-\\d+") || messageId.matches(".*#[a-z]+-\\d+")) {
-      // "Rule X" = FHIRPath invariant; "xyz-N" or "url#xyz-N" = named constraint key (e.g. dom-6, obs-7)
+    } else if (messageId.startsWith("Rule ") || messageId.matches("[a-z]+-\\d+") || messageId.matches(".*#[a-z][a-z0-9-]+")) {
+      // "Rule X" = FHIRPath invariant; "xyz-N" or "url#constraint-name" = named constraint key (e.g. dom-6, encounter-ach-monthly-initial-population)
       return OperationOutcome.IssueType.INVARIANT;
     }
 
@@ -185,6 +185,7 @@ public class Validator {
       case I18nConstants.BUNDLE_BUNDLE_ENTRY_TYPE:
       case I18nConstants.BUNDLE_BUNDLE_ENTRY_TYPE2:
       case I18nConstants.BUNDLE_BUNDLE_ENTRY_TYPE3:
+      case I18nConstants.CANONICAL_MULTIPLE_VERSIONS_KNOWN:
       case I18nConstants.DEFINED_IN_THE_PROFILE:
       case I18nConstants.MUSTSUPPORT_VAL_MUSTSUPPORT:
       case I18nConstants.TERMINOLOGY_TX_HINT:
@@ -476,6 +477,7 @@ public class Validator {
     fhirInstanceValidator.setAnyExtensionsAllowed(true);
     fhirInstanceValidator.setAssumeValidRestReferences(true);
     //fhirInstanceValidator.setBestPracticeWarningLevel(BestPracticeWarningLevel.Ignore);
+
     // Workaround for HAPI 8.8.0+ regression (https://github.com/hapifhir/hapi-fhir/issues/7602):
     // R5 bundle relative reference policy enforced in core 6.6+ causes false-positive reference errors.
     // Suppress at the policy advisor level so resolution work is skipped entirely.
@@ -621,7 +623,9 @@ public class Validator {
       validator = this.validator;
     }
 
-    logger.debug("Validating {}", resource.getResourceType().toString().toLowerCase());
+    int entryCount = resource.getResourceType() == ResourceType.Bundle
+            ? ((Bundle) resource).getEntry().size() : 1;
+    logger.info("Validating {} with {} entries", resource.getResourceType().toString().toLowerCase(), entryCount);
 
     ValidationCategorizer categorizer = new ValidationCategorizer();
     categorizer.loadFromResources();
@@ -639,8 +643,7 @@ public class Validator {
     this.improveIssueExpressions(resource, outcome);
 
     Date end = new Date();
-    logger.debug("Validation took {} seconds", TimeUnit.MILLISECONDS.toSeconds(end.getTime() - start.getTime()));
-    logger.debug("Validation found {} issues", outcome.getIssue().size());
+    logger.info("Validation took {} seconds and found {} issues", TimeUnit.MILLISECONDS.toSeconds(end.getTime() - start.getTime()), outcome.getIssue().size());
 
     // Add extensions (which don't formally exist) that show the total issue count and severity threshold
     outcome.addExtension(Constants.OperationOutcomeTotalExtensionUrl, new IntegerType(outcome.getIssue().size()));

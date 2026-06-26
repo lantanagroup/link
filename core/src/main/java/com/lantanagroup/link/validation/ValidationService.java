@@ -36,6 +36,7 @@ public class ValidationService {
 
   private final Validator validator = new Validator();
   private volatile List<String> cachedMeasureIds = null;
+  private final java.util.concurrent.atomic.AtomicInteger validationCounter = new java.util.concurrent.atomic.AtomicInteger(0);
 
   public OperationOutcome validate(StopwatchManager stopwatchManager, TenantService tenantService, Report report) {
     List<Bundle> measureDefinitions = report.getMeasureIds().stream()
@@ -51,6 +52,13 @@ public class ValidationService {
 
     ValidationCategorizer categorizer = new ValidationCategorizer();
     categorizer.loadFromResources();
+
+    int patientCount = tenantService.getPatientMeasureReports(report.getId()).size();
+    int validationNumber = this.validationCounter.incrementAndGet();
+    logger.info("Starting validation #{} for report {} ({} patients)", validationNumber, report.getId(), patientCount);
+    if (validationNumber % 100 == 0) {
+      logger.info("Validation milestone: {} reports validated so far", validationNumber);
+    }
 
     List<String> currentMeasureIds = report.getMeasureIds();
     boolean reinitialize = !currentMeasureIds.equals(this.cachedMeasureIds);
