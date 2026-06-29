@@ -50,8 +50,7 @@ public class ValidationService {
     FhirBundler bundler = new FhirBundler(this.eventService, this.sharedService, tenantService);
     Bundle bundle = bundler.generateBundle(report);
 
-    ValidationCategorizer categorizer = new ValidationCategorizer();
-    categorizer.loadFromResources();
+    ValidationCategorizer categorizer = Validator.getCategorizer();
 
     int patientCount = tenantService.getPatientMeasureReports(report.getId()).size();
     int validationNumber = this.validationCounter.incrementAndGet();

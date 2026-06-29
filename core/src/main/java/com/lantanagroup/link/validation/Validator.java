@@ -67,6 +67,21 @@ public class Validator {
 
   private volatile FhirValidator validator;
 
+  private static final ValidationCategorizer CATEGORIZER;
+  private static final List<RuleBasedValidationCategory> SUPPRESSED_CATEGORIES;
+
+  static {
+    CATEGORIZER = new ValidationCategorizer();
+    CATEGORIZER.loadFromResources();
+    SUPPRESSED_CATEGORIES = CATEGORIZER.getCategories().stream()
+            .filter(c -> Boolean.TRUE.equals(c.getSuppress()))
+            .collect(java.util.stream.Collectors.toUnmodifiableList());
+  }
+
+  public static ValidationCategorizer getCategorizer() {
+    return CATEGORIZER;
+  }
+
   private static OperationOutcome.IssueSeverity getIssueSeverity(ResultSeverityEnum severity) {
     switch (severity) {
       case ERROR:
@@ -627,19 +642,13 @@ public class Validator {
             ? ((Bundle) resource).getEntry().size() : 1;
     logger.info("Validating {} with {} entries", resource.getResourceType().toString().toLowerCase(), entryCount);
 
-    ValidationCategorizer categorizer = new ValidationCategorizer();
-    categorizer.loadFromResources();
-    List<RuleBasedValidationCategory> suppressedCategories = categorizer.getCategories().stream()
-            .filter(c -> Boolean.TRUE.equals(c.getSuppress()))
-            .collect(Collectors.toList());
-
     OperationOutcome outcome = new OperationOutcome();
     Date start = new Date();
 
     //noinspection unused
     outcome.setId(UUID.randomUUID().toString());
 
-    this.validateResource(validator, resource, outcome, severity, suppressedCategories, categorizer);
+    this.validateResource(validator, resource, outcome, severity, SUPPRESSED_CATEGORIES, CATEGORIZER);
     this.improveIssueExpressions(resource, outcome);
 
     Date end = new Date();
