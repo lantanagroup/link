@@ -1,11 +1,15 @@
 package com.lantanagroup.link.validation;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.context.support.ConceptValidationOptions;
 import ca.uhn.fhir.context.support.DefaultProfileValidationSupport;
+import ca.uhn.fhir.context.support.IValidationSupport;
+import ca.uhn.fhir.context.support.ValidationSupportContext;
 import ca.uhn.fhir.validation.*;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
 import org.hl7.fhir.common.hapi.validation.support.*;
+import org.hl7.fhir.common.hapi.validation.validator.FhirDefaultPolicyAdvisor;
 import org.hl7.fhir.common.hapi.validation.validator.FhirInstanceValidator;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
@@ -16,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
+import java.util.stream.Collectors;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,7 +28,59 @@ import java.util.regex.Pattern;
 public class Validator {
   protected static final Logger logger = LoggerFactory.getLogger(Validator.class);
 
+  /**
+   * Short-circuits terminology chain traversal for large external code systems that have no
+   * CodeSystem definitions loaded (LOINC, RxNorm, SNOMED, ICD-10). Without this, HAPI traverses
+   * the full ValidationSupportChain for every coded value, generating ~115k passthrough messages
+   * and significant CPU overhead. Remove or disable this support once the measure package includes
+   * proper ValueSet expansion elements that enable in-memory code validation.
+   */
+  private static class SkipTerminologyValidationSupport extends BaseValidationSupport {
+    private static final Set<String> SKIPPED_SYSTEMS = Set.of(
+            "http://loinc.org",
+            "http://www.nlm.nih.gov/research/umls/rxnorm",
+            "http://snomed.info/sct",
+            "http://hl7.org/fhir/sid/icd-10",
+            "http://hl7.org/fhir/sid/icd-10-cm",
+            "http://hl7.org/fhir/sid/icd-9-cm"
+    );
+
+    public SkipTerminologyValidationSupport(FhirContext theCtx) {
+      super(theCtx);
+    }
+
+    @Override
+    public boolean isCodeSystemSupported(ValidationSupportContext theValidationSupportContext, String theSystem) {
+      return SKIPPED_SYSTEMS.contains(theSystem);
+    }
+
+    @Override
+    public CodeValidationResult validateCode(ValidationSupportContext theValidationSupportContext,
+                                             ConceptValidationOptions theOptions,
+                                             String theCodeSystem, String theCode,
+                                             String theDisplay, String theValueSetUrl) {
+      // Return "ok" to claim the result and prevent further chain traversal.
+      // This is intentionally permissive until ValueSet expansions are available in the measure package.
+      return new CodeValidationResult().setCode(theCode);
+    }
+  }
+
   private volatile FhirValidator validator;
+
+  private static final ValidationCategorizer CATEGORIZER;
+  private static final List<RuleBasedValidationCategory> SUPPRESSED_CATEGORIES;
+
+  static {
+    CATEGORIZER = new ValidationCategorizer();
+    CATEGORIZER.loadFromResources();
+    SUPPRESSED_CATEGORIES = CATEGORIZER.getCategories().stream()
+            .filter(c -> Boolean.TRUE.equals(c.getSuppress()))
+            .collect(java.util.stream.Collectors.toUnmodifiableList());
+  }
+
+  public static ValidationCategorizer getCategorizer() {
+    return CATEGORIZER;
+  }
 
   private static OperationOutcome.IssueSeverity getIssueSeverity(ResultSeverityEnum severity) {
     switch (severity) {
@@ -43,7 +100,8 @@ public class Validator {
   private static OperationOutcome.IssueType getIssueCode(String messageId) {
     if (messageId == null) {
       return OperationOutcome.IssueType.NULL;
-    } else if (messageId.startsWith("Rule ")) {
+    } else if (messageId.startsWith("Rule ") || messageId.matches("[a-z]+-\\d+") || messageId.matches(".*#[a-z][a-z0-9-]+")) {
+      // "Rule X" = FHIRPath invariant; "xyz-N" or "url#constraint-name" = named constraint key (e.g. dom-6, encounter-ach-monthly-initial-population)
       return OperationOutcome.IssueType.INVARIANT;
     }
 
@@ -142,6 +200,7 @@ public class Validator {
       case I18nConstants.BUNDLE_BUNDLE_ENTRY_TYPE:
       case I18nConstants.BUNDLE_BUNDLE_ENTRY_TYPE2:
       case I18nConstants.BUNDLE_BUNDLE_ENTRY_TYPE3:
+      case I18nConstants.CANONICAL_MULTIPLE_VERSIONS_KNOWN:
       case I18nConstants.DEFINED_IN_THE_PROFILE:
       case I18nConstants.MUSTSUPPORT_VAL_MUSTSUPPORT:
       case I18nConstants.TERMINOLOGY_TX_HINT:
@@ -422,22 +481,31 @@ public class Validator {
             .filter(Objects::nonNull)
             .forEachOrdered(measureDefinitionBasedValidationSupport::addResource);
     ValidationSupportChain validationSupportChain = new ValidationSupportChain(
+            new SkipTerminologyValidationSupport(fhirContext),
             new DefaultProfileValidationSupport(fhirContext),
             ClasspathBasedValidationSupport.getInstance(),
             measureDefinitionBasedValidationSupport,
             new SnapshotGeneratingValidationSupport(fhirContext),
             new InMemoryTerminologyServerValidationSupport(fhirContext),
             new CommonCodeSystemsTerminologyService(fhirContext));
-    // CachingValidationSupport cachingValidationSupport = new CachingValidationSupport(validationSupportChain);
     FhirInstanceValidator fhirInstanceValidator = new FhirInstanceValidator(validationSupportChain);
     fhirInstanceValidator.setAnyExtensionsAllowed(true);
     fhirInstanceValidator.setAssumeValidRestReferences(true);
-    fhirInstanceValidator.setBestPracticeWarningLevel(BestPracticeWarningLevel.Error);
+    //fhirInstanceValidator.setBestPracticeWarningLevel(BestPracticeWarningLevel.Ignore);
+
+    // Workaround for HAPI 8.8.0+ regression (https://github.com/hapifhir/hapi-fhir/issues/7602):
+    // R5 bundle relative reference policy enforced in core 6.6+ causes false-positive reference errors.
+    // Suppress at the policy advisor level so resolution work is skipped entirely.
+    fhirInstanceValidator.setValidatorPolicyAdvisor(new FhirDefaultPolicyAdvisor() {
+      @Override
+      public boolean isSuppressMessageId(String theMessageId, String theMessageArgument) {
+        return I18nConstants.REFERENCE_REF_NOTFOUND_BUNDLE.equals(theMessageId);
+      }
+    });
     validator.registerValidatorModule(fhirInstanceValidator);
 
     validator.setExecutorService(ForkJoinPool.commonPool());
-    // Concurrent validation is disabled to preserve deterministic issue ordering in the OperationOutcome.
-    validator.setConcurrentBundleValidation(false);
+    validator.setConcurrentBundleValidation(true);
 
     return validator;
   }
@@ -454,8 +522,18 @@ public class Validator {
     return outcome;
   }
 
-  private void validateResource(FhirValidator validator, Resource resource, OperationOutcome outcome, OperationOutcome.IssueSeverity severity) {
+  private void validateResource(FhirValidator validator, Resource resource, OperationOutcome outcome,
+                                OperationOutcome.IssueSeverity severity,
+                                List<RuleBasedValidationCategory> suppressedCategories,
+                                ValidationCategorizer categorizer) {
     ValidationResult result = validator.validateWithResult(resource, newR4ValidationOptions());
+
+    Map<String, Long> messageIdCounts = result.getMessages().stream()
+            .collect(Collectors.groupingBy(m -> m.getMessageId() == null ? "null" : m.getMessageId(), Collectors.counting()));
+    messageIdCounts.entrySet().stream()
+            .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+            .limit(20)
+            .forEach(e -> logger.debug("Message ID '{}': {} occurrences", e.getKey(), e.getValue()));
 
     for (SingleValidationMessage message : result.getMessages()) {
       OperationOutcome.IssueSeverity messageSeverity = getIssueSeverity(message.getSeverity());
@@ -482,13 +560,31 @@ public class Validator {
         issueCode = OperationOutcome.IssueType.INVALID;
       }
 
-      outcome.addIssue()
+      OperationOutcome.OperationOutcomeIssueComponent issue = new OperationOutcome.OperationOutcomeIssueComponent()
               .setSeverity(messageSeverity)
               .setCode(issueCode)
               .setDetails(new CodeableConcept().setText(message.getMessage()))
               .setExpression(List.of(
                       new StringType(message.getLocationString()),
                       new StringType(message.getLocationLine() + ":" + message.getLocationCol())));
+
+      // Workaround for HAPI 8.8.0+ regression (https://github.com/hapifhir/hapi-fhir/issues/7602):
+      // bundle-internal reference validation ignores configured policy and hardcodes CHECK_VALID,
+      // flooding output with reference-not-found and terminology passthrough messages.
+      // Fixed upstream in PR #7595 but not yet released in 8.10.0.
+      if (I18nConstants.REFERENCE_REF_NOTFOUND_BUNDLE.equals(message.getMessageId())
+              || I18nConstants.TERMINOLOGY_PASSTHROUGH_TX_MESSAGE.equals(message.getMessageId())) {
+        continue;
+      }
+
+      if (!suppressedCategories.isEmpty()) {
+        ValidationCategorizer.Issue categorizerIssue = new ValidationCategorizer.Issue(issue);
+        if (suppressedCategories.stream().anyMatch(c -> categorizer.isMatch(c, categorizerIssue))) {
+          continue;
+        }
+      }
+
+      outcome.addIssue(issue);
     }
   }
 
@@ -542,7 +638,9 @@ public class Validator {
       validator = this.validator;
     }
 
-    logger.debug("Validating {}", resource.getResourceType().toString().toLowerCase());
+    int entryCount = resource.getResourceType() == ResourceType.Bundle
+            ? ((Bundle) resource).getEntry().size() : 1;
+    logger.info("Validating {} with {} entries", resource.getResourceType().toString().toLowerCase(), entryCount);
 
     OperationOutcome outcome = new OperationOutcome();
     Date start = new Date();
@@ -550,12 +648,11 @@ public class Validator {
     //noinspection unused
     outcome.setId(UUID.randomUUID().toString());
 
-    this.validateResource(validator, resource, outcome, severity);
+    this.validateResource(validator, resource, outcome, severity, SUPPRESSED_CATEGORIES, CATEGORIZER);
     this.improveIssueExpressions(resource, outcome);
 
     Date end = new Date();
-    logger.debug("Validation took {} seconds", TimeUnit.MILLISECONDS.toSeconds(end.getTime() - start.getTime()));
-    logger.debug("Validation found {} issues", outcome.getIssue().size());
+    logger.info("Validation took {} seconds and found {} issues", TimeUnit.MILLISECONDS.toSeconds(end.getTime() - start.getTime()), outcome.getIssue().size());
 
     // Add extensions (which don't formally exist) that show the total issue count and severity threshold
     outcome.addExtension(Constants.OperationOutcomeTotalExtensionUrl, new IntegerType(outcome.getIssue().size()));

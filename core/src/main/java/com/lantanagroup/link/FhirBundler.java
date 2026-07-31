@@ -28,6 +28,8 @@ public class FhirBundler {
 
   private final TenantService tenantService;
 
+  private final Validator validator = new Validator();
+
   private Organization org;
 
   private Map<String, Resource> lineLevelResources;
@@ -138,8 +140,9 @@ public class FhirBundler {
     }
 
     Map<IdType, Resource> sharedResourcesById = new HashMap<>();
-    Validator validator = new Validator();
     SimplePreQualReport preQual = new SimplePreQualReport(this.tenantService.getConfig().getId(), report);
+    int totalPatients = pmrIdsByHashedPatientId.size();
+    int patientCounter = 0;
 
     for (Map.Entry<String, List<String>> pmrIdByHashedPatientId : pmrIdsByHashedPatientId.entrySet()) {
       Bundle bundle = new Bundle();
@@ -178,8 +181,10 @@ public class FhirBundler {
               .findFirst()
               .orElse(null);
       String id = Objects.requireNonNullElse(patientId, hashedPatientId);
+      patientCounter++;
+      logger.info("Validating patient {}/{}: {} ({} entries)", patientCounter, totalPatients, id, bundle.getEntry().size());
 
-      OperationOutcome oo = validator.validate(bundle, OperationOutcome.IssueSeverity.INFORMATION, measureDefinitions, false);
+      OperationOutcome oo = this.validator.validate(bundle, OperationOutcome.IssueSeverity.INFORMATION, measureDefinitions, false);
       String ooFilename = String.format(Submission.VALIDATION, id);
       submission.write(ooFilename, oo);
 
@@ -569,6 +574,7 @@ public class FhirBundler {
     individualMeasureReport.getMeta().addProfile(Constants.IndividualMeasureReportProfileUrl);
 
     // Clean up the contained resources within the measure report
+    List<Reference> allReferences = FhirScanner.findReferences(individualMeasureReport);
     individualMeasureReport.getContained().stream()
             .filter(c -> c.hasId() && c.getIdElement().getIdPart().startsWith("LCR-"))
             .forEach(c -> {
@@ -579,7 +585,7 @@ public class FhirBundler {
               // Update ALL references (including in extensions) from #LCR-oldId to #newId
               String oldRef = "#" + oldId;
               String newRef = "#" + newId;
-              FhirScanner.findReferences(individualMeasureReport).stream()
+              allReferences.stream()
                       .filter(r -> r.hasReference() && r.getReference().equals(oldRef))
                       .forEach(r -> r.setReference(newRef));
 

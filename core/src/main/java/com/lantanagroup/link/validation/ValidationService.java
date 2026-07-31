@@ -34,6 +34,10 @@ public class ValidationService {
   @Autowired
   private EventService eventService;
 
+  private final Validator validator = new Validator();
+  private volatile List<String> cachedMeasureIds = null;
+  private final java.util.concurrent.atomic.AtomicInteger validationCounter = new java.util.concurrent.atomic.AtomicInteger(0);
+
   public OperationOutcome validate(StopwatchManager stopwatchManager, TenantService tenantService, Report report) {
     List<Bundle> measureDefinitions = report.getMeasureIds().stream()
             .map(sharedService::getMeasureDefinition)
@@ -46,15 +50,26 @@ public class ValidationService {
     FhirBundler bundler = new FhirBundler(this.eventService, this.sharedService, tenantService);
     Bundle bundle = bundler.generateBundle(report);
 
-    Validator validator = new Validator();
+    ValidationCategorizer categorizer = Validator.getCategorizer();
 
-    ValidationCategorizer categorizer = new ValidationCategorizer();
-    categorizer.loadFromResources();
+    int patientCount = tenantService.getPatientMeasureReports(report.getId()).size();
+    int validationNumber = this.validationCounter.incrementAndGet();
+    logger.info("Starting validation #{} for report {} ({} patients)", validationNumber, report.getId(), patientCount);
+    if (validationNumber % 100 == 0) {
+      logger.info("Validation milestone: {} reports validated so far", validationNumber);
+    }
+
+    List<String> currentMeasureIds = report.getMeasureIds();
+    boolean reinitialize = !currentMeasureIds.equals(this.cachedMeasureIds);
+    if (reinitialize) {
+      logger.debug("Measure definitions changed or first run — reinitializing FhirValidator");
+      this.cachedMeasureIds = new ArrayList<>(currentMeasureIds);
+    }
 
     try (Stopwatch stopwatch = stopwatchManager.start(Constants.TASK_VALIDATE, Constants.CATEGORY_VALIDATION)) {
       // Always get information severity level so that we persist all possible issues, but only return the severity asked
       // for when making requests to the REST API.
-      outcome = validator.validate(bundle, OperationOutcome.IssueSeverity.INFORMATION, measureDefinitions);
+      outcome = this.validator.validate(bundle, OperationOutcome.IssueSeverity.INFORMATION, measureDefinitions, reinitialize);
 
       // Remove issues that match a suppressed category before persisting or returning
       outcome.getIssue().removeIf(ooIssue -> {
