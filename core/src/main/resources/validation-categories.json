@@ -1230,6 +1230,10 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "None of the codings provided are in the value set 'Admit source' .*"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'Admit source' .*"
           }
         ],
         "andOperator": false
@@ -1266,6 +1270,10 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "None of the codings provided are in the value set 'Discharge disposition' .*"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'Discharge disposition' .*"
           }
         ],
         "andOperator": false
@@ -1324,6 +1332,14 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "None of the codings provided are in the value set 'ACH Monthly Encounter Initial Population Type ValueSet' .*"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'US Core Encounter Type' .*"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'ACH Monthly Encounter Initial Population Type ValueSet' .*"
           }
         ],
         "andOperator": false
@@ -1534,6 +1550,10 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "None of the codings provided are in the value set 'SNOMED CT Route Codes' \\(http://hl7\\.org/fhir/ValueSet/route-Codes\\|[^)]+\\), and a coding should come from this value set unless it has no suitable Code \\(note that the Validator cannot judge what is suitable\\) \\(Codes = .+\\)"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'SNOMED CT Route Codes' .*"
           }
         ],
         "andOperator": false
@@ -1930,6 +1950,10 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "None of the codings provided are in the value set 'Medication Request Reason ValueSet' .*"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'Medication Request Reason ValueSet' .*"
           }
         ],
         "andOperator": false
@@ -1948,6 +1972,24 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "The concept '.*' has a status of inactive and its use should be reviewed"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_medicationrequest_status_reason_code",
+    "title": "Missing Valid MedicationRequest status reason Code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "MedicationRequest.statusReason contains a Code that is not in the bound value set, and a Valid Code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'Medication request status reason codes' .*"
           }
         ],
         "andOperator": false
@@ -2100,6 +2142,10 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "None of the codings provided are in the value set 'US Core Laboratory Test Codes' \\(http://hl7\\.org/fhir/us/core/ValueSet/us-core-laboratory-test-Codes\\|[^)]+\\), and a coding should come from this value set unless it has no suitable Code \\(note that the Validator cannot judge what is suitable\\) \\(codes = .+\\)"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'US Core Laboratory Test Codes' .*"
           }
         ],
         "andOperator": false
@@ -2284,6 +2330,10 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "(Observation\\.status(\\.coding(\\.Code)?)?: .*(not in the value set|None of the Codes provided|not a Valid Code|is not Valid in the value set)|None of the Codes provided are in the value set.*Observation\\.status|The Code .*? is not Valid in the value set.*Observation\\.status)"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The value provided \\('[^']*'\\) was not found in the value set 'Non-Negative Observation Status' \\(http://hl7\\.org/fhir/us/qicore/ValueSet/qicore-non-negative-observation-status\\|[^)]+\\), and a code is required from this value set \\(error message = Unknown code '[^']*' for in-memory expansion of ValueSet 'http://hl7\\.org/fhir/us/qicore/ValueSet/qicore-non-negative-observation-status'\\)"
           }
         ],
         "andOperator": false
@@ -2535,7 +2585,7 @@
   {
     "id": "missing_valid_servicerequest_code",
     "title": "Missing Valid ServiceRequest Code",
-    "severity": "ERROR",
+    "severity": "WARNING",
     "acceptable": true,
     "guidance": "ServiceRequest.Code contains a Code that is not in the bound value set, and a Valid Code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
     "ruleSets": [
@@ -2548,6 +2598,10 @@
           {
             "field": "EXPRESSION",
             "regex": "Bundle\\.entry\\[.*\\]\\.resource\\.ofType\\(ServiceRequest\\)\\.where\\(id = '.*'\\)\\.code.*"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'Procedure Codes .*"
           }
         ],
         "andOperator": true
@@ -2768,6 +2822,10 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "No code provided, and a code should be provided from the value set 'IdentifierType' .*"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'IdentifierType' .*"
           }
         ],
         "andOperator": false
@@ -3150,6 +3208,10 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "None of the codings provided are in the value set 'Patient Contact Relationship ' .*"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'Patient Contact Relationship .*"
           }
         ],
         "andOperator": false
@@ -3843,6 +3905,10 @@
            {
               "field": "DETAILS_TEXT",
               "regex": "None of the codings provided are in the value set 'Language codes with language and optionally a region modifier' \\(http://hl7\\.org/fhir/us/core/ValueSet/simple-language\\|[^)]+\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(codes = [^)]+\\)"
+           },
+           {
+              "field": "DETAILS_TEXT",
+              "regex": "No code provided, and a code should be provided from the value set 'Language codes with language and optionally a region modifier' .*"
            }
         ],
         "andOperator": false
