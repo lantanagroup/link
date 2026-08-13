@@ -1983,7 +1983,7 @@
     "title": "Missing Valid MedicationRequest status reason Code",
     "severity": "WARNING",
     "acceptable": true,
-    "guidance": "MedicationRequest.statusReason contains a Code that is not in the bound value set, and a Valid Code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "guidance": "MedicationRequest.statusReason should contain a Code that is in the bound value set 'Medication request status reason codes', and a Valid Code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
     "ruleSets": [
       {
         "rules": [
@@ -2595,6 +2595,15 @@
             "field": "DETAILS_TEXT",
             "regex": "None of the codings provided are in the value set 'Procedure Codes \\(SNOMED CT\\)' \\(http://hl7\\.org/fhir/ValueSet/procedure-code\\|[\\d.]+\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(codes = .+\\)"
           },
+          {
+            "field": "EXPRESSION",
+            "regex": "Bundle\\.entry\\[.*\\]\\.resource\\.ofType\\(ServiceRequest\\)\\.where\\(id = '.*'\\)\\.code.*"
+          }
+        ],
+        "andOperator": true
+      },
+      {
+        "rules": [
           {
             "field": "EXPRESSION",
             "regex": "Bundle\\.entry\\[.*\\]\\.resource\\.ofType\\(ServiceRequest\\)\\.where\\(id = '.*'\\)\\.code.*"
