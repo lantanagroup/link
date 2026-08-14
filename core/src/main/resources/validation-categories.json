@@ -210,12 +210,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "value should not start or finish with whitespace '.*'"
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "'.*Z.*'",
-            "inverse": true
+            "regex": "value should not start or finish with whitespace ' Z.*'"
           },
           {
             "field": "EXPRESSION",
@@ -237,8 +232,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "value should not start or finish with whitespace '.*'",
-            "inverse": false
+            "regex": "value should not start or finish with whitespace '.*'"
           },
           {
             "field": "EXPRESSION",
@@ -995,7 +989,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "None of the codings provided are in the value set 'Payer Type' \\(http://cts\\.nlm\\.nih\\.gov/fhir/ValueSet/2\\.16\\.840\\.1\\.114222\\.4\\.11\\.3591\\|[^)]+\\), and a coding should come from this value set unless it has no suitable Code \\(note that the Validator cannot judge what is suitable\\) \\(Codes = .+\\)"
+            "regex": "None of the codings provided are in the value set 'Payer Type' .*"
           },
           {
             "field": "DETAILS_TEXT",
@@ -1097,7 +1091,11 @@
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "None of the codings provided are in the value set 'US Core Non Laboratory Codes' \\(http://hl7\\.org/fhir/us/core/ValueSet/us-core-diagnosticreport-report-and-note-Codes\\|[^)]+\\), and a coding should come from this value set unless it has no suitable Code \\(note that the Validator cannot judge what is suitable\\) \\(Codes = .+\\)"
+            "regex": "None of the codings provided are in the value set 'US Core Non Laboratory Codes' .*"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'US Core Laboratory Test Codes' \\(http://hl7\\.org/fhir/us/core/ValueSet/us-core-laboratory-test-codes\\|[^)]+\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(codes = .*\\)"
           }
         ],
         "andOperator": false
@@ -1167,10 +1165,18 @@
     "ruleSets": [
       {
         "rules": [
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "The Coding provided \\(.+\\) was not found in the value set 'V3 Value SetActEncounterCode' .*"
-          }
+        {
+          "field": "DETAILS_TEXT",
+          "regex": "The Coding provided \\([^)]+\\) was not found in the value set http://terminology\\.hl7\\.org/ValueSet/v3-ActEncounterCode\\|[^(]+\\(which actually refers to 'V3 Value SetActEncounterCode'.*"
+        },
+        {
+          "field": "DETAILS_TEXT",
+          "regex": "The Coding provided \\([^)]+\\) was not found in the value set\\s+'V3 Value SetActEncounterCode'\\s+\\(http://terminology\\.hl7\\.org/ValueSet/v3-ActEncounterCode\\|[^)]+\\),\\s+and a code should come from this value set unless it has no suitable code\\s+\\(note that the validator cannot judge what is suitable\\)\\.\\s+\\(error message = CodeSystem is unknown and can't be validated:\\s+[^ ]+ for '[^']+';\\s+Unknown code '[^']+' for in-memory expansion of ValueSet\\s+'http://terminology\\.hl7\\.org/ValueSet/v3-ActEncounterCode'\\)"
+        },
+        {
+          "field": "DETAILS_TEXT",
+          "regex": "The Coding provided \\([^)]+\\) was not found in the value set 'NHSN Inpatient Encounter Class Codes' .*"
+        }
         ],
         "andOperator": false
       }
@@ -1224,6 +1230,10 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "None of the codings provided are in the value set 'Admit source' .*"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'Admit source' .*"
           }
         ],
         "andOperator": false
@@ -1260,6 +1270,10 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "None of the codings provided are in the value set 'Discharge disposition' .*"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'Discharge disposition' .*"
           }
         ],
         "andOperator": false
@@ -1314,6 +1328,18 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "None of the codings provided are in the value set 'US Core Encounter Type' .*"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'ACH Monthly Encounter Initial Population Type ValueSet' .*"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'US Core Encounter Type' .*"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'ACH Monthly Encounter Initial Population Type ValueSet' .*"
           }
         ],
         "andOperator": false
@@ -1407,7 +1433,7 @@
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "None of the codings provided are in the value set 'V3 Value SetServiceDeliveryLocationRoleType' .*"
+            "regex": "None of the codings provided are in the value set http://terminology\\.hl7\\.org/ValueSet/v3-ServiceDeliveryLocationRoleType\\|[^(]+\\(which actually refers to 'V3 Value SetServiceDeliveryLocationRoleType' \\(http://terminology\\.hl7\\.org/ValueSet/v3-ServiceDeliveryLocationRoleType\\|[^)]+\\)\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(codes = [^)]+\\)"
           }
         ],
         "andOperator": false
@@ -1465,7 +1491,11 @@
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "^No Code provided, and a Code should be provided from the value set 'Medication Clinical Drug' \\(http://cts\\.nlm\\.nih\\.gov/fhir/ValueSet/2\\.16\\.840\\.1\\.113762\\.1\\.4\\.1010\\.4\\|[0-9]+\\)$"
+            "regex": "No code provided, and a code should be provided from the value set 'Medication Clinical Drug' .*"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'Medication Clinical Drug' .*"
           }
         ],
         "andOperator": false
@@ -1520,6 +1550,10 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "None of the codings provided are in the value set 'SNOMED CT Route Codes' \\(http://hl7\\.org/fhir/ValueSet/route-Codes\\|[^)]+\\), and a coding should come from this value set unless it has no suitable Code \\(note that the Validator cannot judge what is suitable\\) \\(Codes = .+\\)"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'SNOMED CT Route Codes' .*"
           }
         ],
         "andOperator": false
@@ -1717,7 +1751,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "(MedicationRequest\\.dosageInstruction\\.route(\\.coding(\\.Code)?)?: .*(not in the value set|None of the Codes provided|not a Valid Code|is not Valid in the value set)|None of the Codes provided are in the value set.*MedicationRequest\\.dosageInstruction\\.route|The Code .*? is not Valid in the value set.*MedicationRequest\\.dosageInstruction\\.route)"
+            "regex": "None of the codings provided are in the value set 'SNOMED CT Route Codes' \\(http://hl7\\.org/fhir/ValueSet/route-codes\\|[^)]+\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(codes = [^)]+\\)"
           }
         ],
         "andOperator": false
@@ -1915,7 +1949,11 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "(MedicationRequest\\.reasonCode(\\.coding(\\.Code)?)?: .*(not in the value set|None of the Codes provided|not a Valid Code|is not Valid in the value set)|None of the Codes provided are in the value set.*MedicationRequest\\.reasonCode|The Code .*? is not Valid in the value set.*MedicationRequest\\.reasonCode)"
+            "regex": "None of the codings provided are in the value set 'Medication Request Reason ValueSet' .*"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'Medication Request Reason ValueSet' .*"
           }
         ],
         "andOperator": false
@@ -1934,6 +1972,24 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "The concept '.*' has a status of inactive and its use should be reviewed"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_medicationrequest_status_reason_code",
+    "title": "Missing Valid MedicationRequest status reason Code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "MedicationRequest.statusReason should contain a Code that is in the bound value set 'Medication request status reason codes', and a Valid Code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'Medication request status reason codes' .*"
           }
         ],
         "andOperator": false
@@ -2081,11 +2137,15 @@
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "None of the codings provided are in the value set 'US Core Vital Signs ValueSet' \\(http://hl7\\.org/fhir/us/core/ValueSet/us-core-vital-signs\\|[^)]+\\), and a coding should come from this value set unless it has no suitable Code \\(note that the Validator cannot judge what is suitable\\) \\(Codes = .+\\)"
+            "regex": "None of the codings provided are in the value set 'US Core Vital Signs ValueSet' .*"
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "None of the codings provided are in the value set 'US Core Laboratory Test Codes' \\(http://hl7\\.org/fhir/us/core/ValueSet/us-core-laboratory-test-Codes\\|[^)]+\\), and a coding should come from this value set unless it has no suitable Code \\(note that the Validator cannot judge what is suitable\\) \\(Codes = .+\\)"
+            "regex": "None of the codings provided are in the value set 'US Core Laboratory Test Codes' \\(http://hl7\\.org/fhir/us/core/ValueSet/us-core-laboratory-test-Codes\\|[^)]+\\), and a coding should come from this value set unless it has no suitable Code \\(note that the Validator cannot judge what is suitable\\) \\(codes = .+\\)"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'US Core Laboratory Test Codes' .*"
           }
         ],
         "andOperator": false
@@ -2270,6 +2330,10 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "(Observation\\.status(\\.coding(\\.Code)?)?: .*(not in the value set|None of the Codes provided|not a Valid Code|is not Valid in the value set)|None of the Codes provided are in the value set.*Observation\\.status|The Code .*? is not Valid in the value set.*Observation\\.status)"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The value provided \\('[^']*'\\) was not found in the value set 'Non-Negative Observation Status' \\(http://hl7\\.org/fhir/us/qicore/ValueSet/qicore-non-negative-observation-status\\|[^)]+\\), and a code is required from this value set \\(error message = Unknown code '[^']*' for in-memory expansion of ValueSet 'http://hl7\\.org/fhir/us/qicore/ValueSet/qicore-non-negative-observation-status'\\)"
           }
         ],
         "andOperator": false
@@ -2361,9 +2425,9 @@
     "ruleSets": [
       {
         "rules": [
-          {
+           {
             "field": "DETAILS_TEXT",
-            "regex": "(Specimen\\.collection\\.bodySite(\\.coding(\\.Code)?)?: .*(not in the value set|None of the Codes provided|not a Valid Code|is not Valid in the value set)|None of the Codes provided are in the value set.*Specimen\\.collection\\.bodySite|The Code .*? is not Valid in the value set.*Specimen\\.collection\\.bodySite)"
+            "regex": "None of the codings provided are in the value set 'SNOMED CT Body Structures' \\(http://hl7\\.org/fhir/ValueSet/body-site\\|[^)]+\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(codes = [^)]+\\)"
           }
         ],
         "andOperator": false
@@ -2421,7 +2485,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "(Specimen\\.type(\\.coding(\\.Code)?)?: .*(not in the value set|None of the Codes provided|not a Valid Code|is not Valid in the value set)|None of the Codes provided are in the value set.*Specimen\\.type|The Code .*? is not Valid in the value set.*Specimen\\.type)"
+            "regex": "None of the codings provided are in the value set 'Specimen type' \\(http://cts\\.nlm\\.nih\\.gov/fhir/ValueSet/2\\.16\\.840\\.1\\.113762\\.1\\.4\\.1099\\.54\\|[^)]+\\), and a coding from this value set is required\\) \\(codes = [^)]+\\)"
           }
         ],
         "andOperator": false
@@ -2521,7 +2585,7 @@
   {
     "id": "missing_valid_servicerequest_code",
     "title": "Missing Valid ServiceRequest Code",
-    "severity": "ERROR",
+    "severity": "WARNING",
     "acceptable": true,
     "guidance": "ServiceRequest.Code contains a Code that is not in the bound value set, and a Valid Code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
     "ruleSets": [
@@ -2534,6 +2598,19 @@
           {
             "field": "EXPRESSION",
             "regex": "Bundle\\.entry\\[.*\\]\\.resource\\.ofType\\(ServiceRequest\\)\\.where\\(id = '.*'\\)\\.code.*"
+          }
+        ],
+        "andOperator": true
+      },
+      {
+        "rules": [
+          {
+            "field": "EXPRESSION",
+            "regex": "Bundle\\.entry\\[.*\\]\\.resource\\.ofType\\(ServiceRequest\\)\\.where\\(id = '.*'\\)\\.code.*"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'Procedure Codes .*"
           }
         ],
         "andOperator": true
@@ -2754,6 +2831,10 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "No code provided, and a code should be provided from the value set 'IdentifierType' .*"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'IdentifierType' .*"
           }
         ],
         "andOperator": false
@@ -2826,6 +2907,10 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "No code provided, and a code should be provided from the value set 'MaritalStatus' .*"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'MaritalStatus' .*"
           }
         ],
         "andOperator": false
@@ -3132,6 +3217,10 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "None of the codings provided are in the value set 'Patient Contact Relationship ' .*"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'Patient Contact Relationship .*"
           }
         ],
         "andOperator": false
@@ -3334,6 +3423,24 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "Device\\.type: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_device_type_code",
+    "title": "Missing Valid Device type Code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Device.type contains a code that is not in the bound value set, and a valid code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'Device Type' .*"
           }
         ],
         "andOperator": false
@@ -3549,7 +3656,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "None of the codings provided are in the value set 'SNOMED CT Form Codes' \\(http://hl7\\.org/fhir/ValueSet/medication-form-Codes\\|[^)]+\\), and a coding should come from this value set unless it has no suitable Code \\(note that the Validator cannot judge what is suitable\\) \\(Codes = .+\\)"
+            "regex": "None of the codings provided are in the value set 'SNOMED CT Form Codes' *."
           }
         ],
         "andOperator": false
@@ -3668,60 +3775,6 @@
     ]
   },
   {
-    "id": "invalid_data_type_found_in_measurereport_populationdescription_extension",
-    "title": "Invalid Data Type Found in MeasureReport populationDescription Extension",
-    "severity": "ERROR",
-    "acceptable": true,
-    "guidance": "The measurereport-populationDescription extension is defined to carry a markdown value, but the submitted resource supplies a different data type. Please submit an NHSN ServiceNow ticket for resolution.",
-    "ruleSets": [
-      {
-        "rules": [
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "The Extension 'http://hl7\\.org/fhir/StructureDefinition/measurereport-populationDescription' definition allows for the types \\[.+\\] but found type \\w+"
-          }
-        ],
-        "andOperator": false
-      }
-    ]
-  },
-  {
-    "id": "measurereport_populationdescription_extension_wrong_location",
-    "title": "MeasureReport populationDescription Extension Used at Disallowed Location",
-    "severity": "ERROR",
-    "acceptable": true,
-    "guidance": "The measurereport-populationDescription extension was placed at a point in the MeasureReport where the profile does not permit it. The extension is only allowed on the group, group.population, stratifier, and supplementalData elements. Please submit an NHSN ServiceNow ticket for resolution.",
-    "ruleSets": [
-      {
-        "rules": [
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "The extension http://hl7\\.org/fhir/StructureDefinition/measurereport-populationDescription v[\\d.]+ is not allowed to be used at this point \\(.+\\)"
-          }
-        ],
-        "andOperator": false
-      }
-    ]
-  },
-  {
-    "id": "measurereport_supplementaldata_description_max_cardinality",
-    "title": "MeasureReport supplementalData description Exceeds Maximum Cardinality",
-    "severity": "ERROR",
-    "acceptable": true,
-    "guidance": "The supplementalData extension on the MeasureReport carries more than one criteriaReference extension, but the DEQM profile permits at most one. This must be resolved by NHSN, please submit an NHSN ServiceNow ticket for resolution.",
-    "ruleSets": [
-      {
-        "rules": [
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "MeasureReport\\.extension:supplementalData\\.value\\[x\\]\\.extension:description: max allowed = \\d+, but found \\d+ \\(from http://hl7\\.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm\\|[\\d.]+\\)"
-          }
-        ],
-        "andOperator": false
-      }
-    ]
-  },
-  {
     "id": "missing_servicerequest_authoredon_element",
     "title": "Missing ServiceRequest authoredOn Element",
     "severity": "ERROR",
@@ -3740,24 +3793,6 @@
     ]
   },
   {
-    "id": "measurereport_supplementaldata_criteriareference_max_cardinality",
-    "title": "MeasureReport supplementalData criteriaReference Exceeds Maximum Cardinality",
-    "severity": "ERROR",
-    "acceptable": true,
-    "guidance": "The supplementalData extension on the MeasureReport carries more than one criteriaReference extension, but the DEQM profile permits at most one. This must be resolved by NHSN, please submit an NHSN ServiceNow ticket for resolution.",
-    "ruleSets": [
-      {
-        "rules": [
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "MeasureReport\\.extension:supplementalData\\.value\\[x\\]\\.extension:criteriaReference: max allowed = \\d+, but found \\d+ \\(from http://hl7\\.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm\\|[\\d.]+\\)"
-          }
-        ],
-        "andOperator": false
-      }
-    ]
-  },
-  {
     "id": "missing_valid_procedure_status_reason",
     "title": "Missing Valid Procedure statusReason Code",
     "severity": "WARNING",
@@ -3769,6 +3804,138 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "None of the codings provided are in the value set 'QICore Negation Reason Codes' .*"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_encounter_initial_population_criteria",
+    "title": "Missing Encounter Initial Population Criteria",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "The ACH dQM requires the Encounter to qualify for the initial population by meeting at least one of the following: the encounter class is from the ACH Daily encounter class value set, the type is 'Encounter Inpatient' or 'Observation Services', or the encounter location type is from 'Inpatient, Emergency, and Observation Locations'. Ensure the Encounter's class, type, or location type is populated with a qualifying value. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Constraint failed: encounter-ach-daily-initial-population: 'Encounter: \\(class must be from ACH Daily encounter class\\) or \\(type from 'Encounter Inpatient' or 'Observation Services'\\) or \\(Encounter location type from 'Inpatient, Emergency, and Observation Locations'\\)' \\(defined in http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-daily-encounter\\)"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Constraint failed: encounter-ach-monthly-initial-population: .*"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_procedure_performed_datetime_period",
+    "title": "Missing Procedure Performed DateTime or Period",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Procedure.performed element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Constraint failed: us-core-7: 'Performed SHALL be present if the status is 'completed' or 'in-progress'' \\(defined in http://hl7\\.org/fhir/us/core/StructureDefinition/us-core-procedure\\|[^)]+\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "invalid_measurereport",
+    "title": "Invalid MeasureReport",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "One or more structural validation issues were detected in the MeasureReport.. These issues must be resolved by NHSN. No action is required in the source EHR. Please submit an NHSN ServiceNow ticket so the MeasureReport generation can be reviewed and corrected.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "This element does not match any known slice defined in the profile http://hl7\\.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm\\|[^ ]+ \\(this may not be a problem, but you should check that it's not intended to match a slice\\)"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The Extension 'http://hl7\\.org/fhir/StructureDefinition/measurereport-populationDescription' definition allows for the types \\[markdown\\] but found type string"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The extension http://hl7\\.org/fhir/StructureDefinition/measurereport-populationDescription v[^ ]+ is not allowed to be used at this point \\(this element is \\[[^\\]]+\\]; allowed for this version = [^)]+\\)"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "MeasureReport\\.extension:supplementalData\\.value\\[x\\]\\.extension:(description|criteriaReference): max allowed = \\d+, but found \\d+ \\(from http://hl7\\.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm\\|[^)]+\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "encounter_location_type_initial_population_not_met",
+    "title": "Encounter Location Type Initial Population Not Met",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "The ACH Daily encounter constraint (encounter-location-type-initial-population) requires the Encounter to reference at least one Location whose type is from 'Inpatient, Emergency, and Observation Locations'. Ensure the Encounter references a Location with a qualifying type. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Constraint failed: encounter-location-type-initial-population: 'Encounter: references at least one Location where type is from 'Inpatient, Emergency, and Observation Locations'' \\(defined in http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-daily-encounter\\)"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Constraint failed: encounter-location-type-initial-population: 'Encounter: references at least one Location where type is from 'Inpatient, Emergency, and Observation Locations'' \\(defined in http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-encounter\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_patient_communication_language",
+    "title": "Missing Valid Patient Communication Language",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Per US Core conformance, Patient.communication.language SHOULD be a coding from the 'Language codes with language and optionally a region modifier' value set, using a valid urn:ietf:bcp:47 code (for example, 'en' or 'en-US'). The coding provided is not in this value set. This is a FHIR conformance issue only and will not impact submission to NHSN. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+           {
+              "field": "DETAILS_TEXT",
+              "regex": "None of the codings provided are in the value set 'Language codes with language and optionally a region modifier' \\(http://hl7\\.org/fhir/us/core/ValueSet/simple-language\\|[^)]+\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(codes = [^)]+\\)"
+           },
+           {
+              "field": "DETAILS_TEXT",
+              "regex": "No code provided, and a code should be provided from the value set 'Language codes with language and optionally a region modifier' .*"
+           }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_valid_procedure_reason_code",
+    "title": "Missing Valid Procedure Reason Code",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Procedure.reason does not contain a coding from the 'Procedure Reason ValueSet', and a coding should come from this value set unless no suitable code exists. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "None of the codings provided are in the value set 'Procedure Reason ValueSet' \\(http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/ValueSet/procedure-reason-valueset\\|[^)]+\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(codes = [^)]+\\)"
           }
         ],
         "andOperator": false
