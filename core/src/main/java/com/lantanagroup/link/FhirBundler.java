@@ -37,6 +37,7 @@ public class FhirBundler {
   private final List<String> REMOVE_EXTENSIONS = List.of(
           "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.population.description",
           "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.supplementalDataElement.reference",
+          "http://hl7.org/fhir/StructureDefinition/measurereport-populationDescription",
           "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-criteriaReference",
           "http://open.epic.com/FHIR/StructureDefinition/extension/accidentrelated",
           "http://open.epic.com/FHIR/StructureDefinition/extension/epic-id",

@@ -22,6 +22,9 @@ import static org.mockito.Mockito.*;
 
 public class FhirBundlerTests {
 
+  private static final String POPULATION_DESCRIPTION_EXTENSION_URL =
+          "http://hl7.org/fhir/StructureDefinition/measurereport-populationDescription";
+
   private int patientMeasureReportCount = 0;
 
   private <T extends Resource> T deserializeResource(String resourcePath, Class<T> clazz) {
@@ -45,6 +48,11 @@ public class FhirBundlerTests {
 
     patient.setId("test-patient" + this.patientMeasureReportCount);
     patient.addName().setFamily("Patient" + this.patientMeasureReportCount).addGiven("Test" + this.patientMeasureReportCount);
+
+    // Emitted by CQF-Ruler; indv-measurereport-deqm does not allow it on MeasureReport itself
+    mr.addExtension(POPULATION_DESCRIPTION_EXTENSION_URL, new StringType("Initial Population"));
+    mr.getGroupFirstRep().getPopulationFirstRep()
+            .addExtension(POPULATION_DESCRIPTION_EXTENSION_URL, new StringType("Initial Population"));
 
     mr.addEvaluatedResource(new Reference("Patient/test-patient" + this.patientMeasureReportCount));
     mr.addContained(patient);
@@ -134,6 +142,11 @@ public class FhirBundlerTests {
 
     MeasureReport indMeasureReport = (MeasureReport) bundle.getEntry().get(4).getResource();
     Assert.assertEquals(MeasureReport.MeasureReportType.INDIVIDUAL, indMeasureReport.getType());
+
+    // The CQF-Ruler populationDescription extension must not survive bundling
+    Assert.assertNull(indMeasureReport.getExtensionByUrl(POPULATION_DESCRIPTION_EXTENSION_URL));
+    Assert.assertNull(indMeasureReport.getGroupFirstRep().getPopulationFirstRep()
+            .getExtensionByUrl(POPULATION_DESCRIPTION_EXTENSION_URL));
   }
 
   private static MeasureReport createMeasureReport(String id, MeasureReport.MeasureReportType type, String patientId) {
