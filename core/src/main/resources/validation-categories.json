@@ -192,7 +192,7 @@
           },
           {
             "field": "EXPRESSION",
-            "regex": "\\.coding\\[\\d+\\]\\.system"
+            "regex": \\.coding\\[\\d+\\]\\.system
           }
         ],
         "andOperator": true
@@ -259,7 +259,7 @@
           },
           {
             "field": "EXPRESSION",
-            "regex": "\\(ServiceRequest\\)\\.*occurrence\\.*repeat"
+            "regex": \\(ServiceRequest\\)\\.*occurrence\\.*repeat
           }
         ],
         "andOperator": false
@@ -384,24 +384,6 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "^The Measure '.+\\|[^']+' could not be resolved, so no Validation can be performed against the Measure$"
-          }
-        ],
-        "andOperator": false
-      }
-    ]
-  },
-  {
-    "id": "missing_condition_category_us_core",
-    "title": "Missing US Core Condition Category",
-    "severity": "ERROR",
-    "acceptable": true,
-    "guidance": "Condition.category:us-core is required for reporting to NHSN. At least one Condition.category must contain a Code from the US Core Condition Category Codes ValueSet. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
-    "ruleSets": [
-      {
-        "rules": [
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "Condition\\.category:us-core: minimum required = 1, but only found 0"
           }
         ],
         "andOperator": false
@@ -784,6 +766,10 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "Condition\\.category: minimum required = 1, but only found 0"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Condition\\.category:us-core: minimum required = 1, but only found 0"
           }
         ],
         "andOperator": false
@@ -918,6 +904,60 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "Constraint failed: us-core-15: 'Member Id in Coverage\\.identifier or Coverage\\.subscriberId SHALL be present' \\(defined in http://hl7\\.org/fhir/us/core/StructureDefinition/us-core-coverage\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_coverage_beneficiary_element",
+    "title": "Missing Coverage Beneficiary Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Coverage.beneficiary element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Coverage\\.beneficiary\\.reference minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_coverage_payor_element",
+    "title": "Missing Coverage Payor Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Coverage.payor element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Coverage\\.payor\\.reference minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_coverage_identifier_type_element",
+    "title": "Missing Coverage Identifier Type Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Coverage.identifier.type element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Coverage\\.identifier.type minimum required = 1, but only found 0"
           }
         ],
         "andOperator": false
@@ -1156,6 +1196,114 @@
       }
     ]
   },
+   {
+    "id": "missing_diagnosticreport_based_on_element",
+    "title": "Missing DiagnosticReport basedOn Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "DiagnosticReport.basedOn.reference is required but was not provided. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "DiagnosticReport\\.basedOn\\.reference: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+   {
+    "id": "missing_diagnosticreport_effective_element",
+    "title": "Missing DiagnosticReport Effective Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "DiagnosticReport.effective is required but was not provided. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "DiagnosticReport\\.effective: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+   {
+    "id": "missing_diagnosticreport_result_element",
+    "title": "Missing DiagnosticReport Result Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "DiagnosticReport.result.reference is required but was not provided. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "DiagnosticReport\\.result\\.reference: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+   {
+    "id": "missing_diagnosticreport_specimen_element",
+    "title": "Missing DiagnosticReport Specimen Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "DiagnosticReport.specimen.reference is required but was not provided. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "DiagnosticReport\\.specimen\\.reference: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+   {
+    "id": "missing_diagnosticreport_status_element",
+    "title": "Missing DiagnosticReport Status Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "DiagnosticReport.status is required but was not provided. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "DiagnosticReport\\.status: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+   {
+    "id": "missing_diagnosticreport_subject_element",
+    "title": "Missing DiagnosticReport Subject Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "DiagnosticReport.subject.reference is required but was not provided. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "DiagnosticReport\\.subject\\.reference: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
   {
     "id": "missing_valid_encounter_class_code",
     "title": "Missing Valid Encounter class Code",
@@ -1376,6 +1524,60 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "Encounter\\.type: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_encounter_diagnosis_condition_element",
+    "title": "Missing Encounter Diagnosis Condition Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Encounter.diagnosis.condition Element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Encounter\\.diagnosis\\.condition: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_encounter_period_element",
+    "title": "Missing Encounter Period Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Encounter.period Element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Encounter\\.period: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_encounter_subject_element",
+    "title": "Missing Encounter Subject Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Encounter.subject element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Encounter\\.subject: minimum required = 1, but only found 0"
           }
         ],
         "andOperator": false
@@ -1983,7 +2185,7 @@
     "title": "Missing Valid MedicationRequest status reason Code",
     "severity": "WARNING",
     "acceptable": true,
-    "guidance": "MedicationRequest.statusReason should contain a Code that is in the bound value set 'Medication request status reason codes', and a Valid Code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "guidance": "MedicationRequest.statusReason contains a Code that is not in the bound value set, and a Valid Code is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
     "ruleSets": [
       {
         "rules": [
@@ -2598,15 +2800,6 @@
           {
             "field": "EXPRESSION",
             "regex": "Bundle\\.entry\\[.*\\]\\.resource\\.ofType\\(ServiceRequest\\)\\.where\\(id = '.*'\\)\\.code.*"
-          }
-        ],
-        "andOperator": true
-      },
-      {
-        "rules": [
-          {
-            "field": "EXPRESSION",
-            "regex": "Bundle\\.entry\\[.*\\]\\.resource\\.ofType\\(ServiceRequest\\)\\.where\\(id = '.*'\\)\\.code.*"
           },
           {
             "field": "DETAILS_TEXT",
@@ -2701,6 +2894,42 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "ServiceRequest\\.intent: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_servicerequest_specimen_element",
+    "title": "Missing ServiceRequest Specimen Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "ServiceRequest.specimen Element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "ServiceRequest\\.specimen: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_servicerequest_subject_element",
+    "title": "Missing ServiceRequest Subject Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "ServiceRequest.subject element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "ServiceRequest\\.subject: minimum required = 1, but only found 0"
           }
         ],
         "andOperator": false
@@ -3412,6 +3641,24 @@
     ]
   },
   {
+    "id": "missing_device_patient_element",
+    "title": "Missing Device Patient Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Device.patient is required for reporting to NHSN but was not provided. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Device\\.patient minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
     "id": "missing_device_type_element",
     "title": "Missing Device Type Element",
     "severity": "ERROR",
@@ -3574,6 +3821,60 @@
     ]
   },
   {
+    "id": "missing_specimen_collection_element",
+    "title": "Missing Specimen Collection Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Specimen.collection is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Specimen\\.collection\\: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_specimen_collection_collected_element",
+    "title": "Missing Specimen Collection Collected Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Specimen.collection.bodySite is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Specimen\\.collection\\.collected: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_specimen_subject_element",
+    "title": "Missing Specimen Subject Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Specimen.subject is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Specimen\\.subject\\.reference: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
     "id": "Element_does_not_match_known_slice",
     "title": "Element Does Not Match Known Slice",
     "severity": "WARNING",
@@ -3584,7 +3885,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "This element does not match any known slice defined in the profile http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/[A-Za-z0-9\\-]+\\|[^)\\s]+"
+            "regex": "This element does not match any known slice defined in the profile http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/[A-Za-z0-9\\-]+(\\|[^)\\s]+)?"
           }
         ],
         "andOperator": false
@@ -3621,6 +3922,60 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "Procedure\\.encounter\\.reference: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_procedure_location_element",
+    "title": "Missing Procedure Location Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Procedure.location.reference is required but was not provided. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Procedure\\.location\\.reference: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_procedure_reason_reference_element",
+    "title": "Missing Procedure ReasonReference Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Procedure.reasonReference.reference is required but was not provided. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Procedure\\.reasonReference\\.reference: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_procedure_subject_element",
+    "title": "Missing Procedure Subject Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Procedure.subject.reference is required but was not provided. Please correct in the EHR and re-submit.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Procedure\\.subject\\.reference: minimum required = 1, but only found 0"
           }
         ],
         "andOperator": false
@@ -3861,15 +4216,15 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "This element does not match any known slice defined in the profile http://hl7\\.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm\\|[^ ]+ \\(this may not be a problem, but you should check that it's not intended to match a slice\\)"
+            "regex": "This element does not match any known slice defined in the profile http://hl7\\.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm(\\|[^ )]+)?"
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "The Extension 'http://hl7\\.org/fhir/StructureDefinition/measurereport-populationDescription' definition allows for the types \\[markdown\\] but found type string"
+            "regex": "The Extension 'http://hl7\\.org/fhir/StructureDefinition/measurereport-populationDescription' definition allows for the types \\[[^\\]]+\\] but found type \\w+"
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "The extension http://hl7\\.org/fhir/StructureDefinition/measurereport-populationDescription v[^ ]+ is not allowed to be used at this point \\(this element is \\[[^\\]]+\\]; allowed for this version = [^)]+\\)"
+            "regex": "The extension http://hl7\\.org/fhir/StructureDefinition/measurereport-populationDescription( v[^ ]+)? is not allowed to be used at this point"
           },
           {
             "field": "DETAILS_TEXT",
@@ -3936,6 +4291,42 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "None of the codings provided are in the value set 'Procedure Reason ValueSet' \\(http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/ValueSet/procedure-reason-valueset\\|[^)]+\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(codes = [^)]+\\)"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_condition_encounter_element",
+    "title": "Missing Condition Encounter Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Condition.encounter is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Condition\\.encounter\\.reference: minimum required = 1, but only found 0"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+   {
+    "id": "missing_condition_subject_element",
+    "title": "Missing Condition Subject Element",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Condition.subject is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Condition\\.subject\\.reference: minimum required = 1, but only found 0"
           }
         ],
         "andOperator": false
