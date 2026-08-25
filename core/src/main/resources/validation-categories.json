@@ -259,7 +259,7 @@
           },
           {
             "field": "EXPRESSION",
-            "regex": \\(ServiceRequest\\)\\.*occurrence\\.*repeat
+            "regex": "\\(ServiceRequest\\)\\.*occurrence\\.*repeat"
           }
         ],
         "andOperator": false
