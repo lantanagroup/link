@@ -796,7 +796,7 @@
         "title": "Missing MedicationAdministration Status Element",
         "severity": "ERROR",
         "acceptable": false,
-        "guidance": "The MedicationAdministration.status does not contain a code. Populate MedicationAdministration.status with a code from http://hl7.org/fhir/us/qicore/ValueSet/qicore-non-negative-medication-admin-status. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+        "guidance": "The MedicationAdministration.status does not contain a code. Populate MedicationAdministration.status with a code from http://hl7.org/fhir/ValueSet/medication-admin-status. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
         "ruleSets": [
             {
                 "rules": [
@@ -1172,7 +1172,7 @@
         "title": "Missing Valid MedicationRequest dosageInstruction route Code",
         "severity": "WARNING",
         "acceptable": false,
-        "guidance": "Recommended guidance: Invalid MedicationRequest.dosageInstruction.route code. Enter a code that identifies the route by which the medication is to be administered from the SNOMED CT Route Codes value set (http://hl7.org/fhir/ValueSet/route-codes). If an applicable code exists, the code must be used and sent. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+        "guidance": "Invalid MedicationRequest.dosageInstruction.route code. Enter a code that identifies the route by which the medication is to be administered from the SNOMED CT Route Codes value set (http://hl7.org/fhir/ValueSet/route-codes). If an applicable code exists, the code must be used and sent. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
         "ruleSets": [
             {
                 "rules": [
@@ -1190,7 +1190,7 @@
         "title": "Missing MedicationRequest dosageInstruction route Element",
         "severity": "ERROR",
         "acceptable": false,
-        "guidance": "Recommended guidance: Missing MedicationRequest.dosageInstruction.route. Provide a code that identifies the route by which the medication is to be administered (for example, oral or intravenous) using a code from the SNOMED CT Route Codes value set (http://hl7.org/fhir/ValueSet/route-codes). If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+        "guidance": "Missing MedicationRequest.dosageInstruction.route. Provide a code that identifies the route by which the medication is to be administered (for example, oral or intravenous) using a code from the SNOMED CT Route Codes value set (http://hl7.org/fhir/ValueSet/route-codes). If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
         "ruleSets": [
             {
                 "rules": [
