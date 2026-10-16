@@ -1,7 +1,7 @@
 [
     {
-        "id": "missing_valid_diagnosticreport_category_code",
-        "title": "Missing Valid DiagnosticReport category Code",
+        "id": "missing_valid_diagnosticreport_lab_category_code",
+        "title": "Missing Valid DiagnosticReport-lab Category Code",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing DiagnosticReport.category code. The DiagnosticReport resource does not contain a category code. Populate DiagnosticReport.category with a valid code from the HL7 v2-0074 Diagnostic Service Section value set (http://terminology.hl7.org/CodeSystem/v2-0074) to identify the type of diagnostic report. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -18,8 +18,8 @@
         ]
     },
     {
-        "id": "missing_diagnosticreport_category_element",
-        "title": "Missing DiagnosticReport category Element",
+        "id": "missing_diagnosticreport_lab_category_element",
+        "title": "Missing DiagnosticReport-lab Category Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing DiagnosticReport.category code. The DiagnosticReport resource does not contain a category code. Populate DiagnosticReport.category with a valid code from the HL7 v2-0074 Diagnostic Service Section value set (http://terminology.hl7.org/CodeSystem/v2-0074) to identify the type of diagnostic report. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -28,11 +28,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "DiagnosticReport\\.category: minimum required = 1, but only found 0"
-                    },
-                    {
-                        "field": "DETAILS_TEXT",
-                        "regex": "Slice 'DiagnosticReport\\.category:LaboratorySlice': a matching slice is required, but not found \\(from http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-daily-diagnosticreport-lab\\|[\\d.]+\\)\\. Note that other slices are allowed in addition to this required slice"
+                        "regex": "DiagnosticReport\\.category: minimum required = 1, but only found 0 \\(from http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-diagnosticreport-lab\\|"
                     }
                 ],
                 "andOperator": false
@@ -40,8 +36,8 @@
         ]
     },
     {
-        "id": "missing_valid_diagnosticreport_code",
-        "title": "Missing Valid DiagnosticReport Code",
+        "id": "missing_valid_diagnosticreport_lab_code",
+        "title": "Missing Valid DiagnosticReport-lab Code",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Invalid DiagnosticReport.code. Provide a  US Core Laboratory Test Codes value set (http://hl7.org/fhir/us/core/ValueSet/us-core-laboratory-test-codes). If an applicable code  exists, the code must be used and sent. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -50,24 +46,20 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "None of the codings provided are in the value set 'LOINC Diagnostic Report Codes' \\(http://hl7\\.org/fhir/ValueSet/report-Codes\\|[\\d.]+\\)"
+                        "regex": "None of the codings provided are in the value set 'US Core Laboratory Test Codes' \\(http://hl7\\.org/fhir/us/core/ValueSet/us-core-laboratory-test-codes\\|[^)]+\\)"
                     },
                     {
-                        "field": "DETAILS_TEXT",
-                        "regex": "None of the codings provided are in the value set 'US Core Non Laboratory Codes' .*"
-                    },
-                    {
-                        "field": "DETAILS_TEXT",
-                        "regex": "None of the codings provided are in the value set 'US Core Laboratory Test Codes' \\(http://hl7\\.org/fhir/us/core/ValueSet/us-core-laboratory-test-codes\\|[^)]+\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\) \\(codes = .*\\)"
+                        "field": "EXPRESSION",
+                        "regex": "^Bundle\\.entry\\[\\d+\\]\\.resource(?:\\.ofType\\(DiagnosticReport\\)(?:\\.where\\([^)]*\\))?|/\\*DiagnosticReport/[^*]*\\*/)\\.code$"
                     }
                 ],
-                "andOperator": false
+                "andOperator": true
             }
         ]
     },
     {
-        "id": "missing_diagnosticreport_code_element",
-        "title": "Missing DiagnosticReport Code Element",
+        "id": "missing_diagnosticreport_lab_code_element",
+        "title": "Missing DiagnosticReport-lab Code Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing DiagnosticReport.code. Provide a  US Core Laboratory Test Codes value set (http://hl7.org/fhir/us/core/ValueSet/us-core-laboratory-test-codes). If an applicable code  exists, the code must be used and sent. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -76,7 +68,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "DiagnosticReport\\.code: minimum required = 1, but only found 0"
+                        "regex": "DiagnosticReport\\.code: minimum required = 1, but only found 0 \\(from http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-diagnosticreport-lab\\|"
                     }
                 ],
                 "andOperator": false
@@ -84,8 +76,8 @@
         ]
     },
     {
-        "id": "missing_diagnosticreport_encounter_element",
-        "title": "Missing DiagnosticReport Encounter Element",
+        "id": "missing_diagnosticreport_lab_encounter_element",
+        "title": "Missing DiagnosticReport-lab Encounter Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing DiagnosticReport.encounter. Add an encounter reference to identify the encounter visit associated with this diagnostic report. Please correct in the EHR and re-submit.",
@@ -94,7 +86,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "DiagnosticReport\\.encounter\\.reference: minimum required = 1, but only found 0"
+                        "regex": "DiagnosticReport\\.encounter\\.reference: minimum required = 1, but only found 0 \\(from http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-diagnosticreport-lab\\|"
                     }
                 ],
                 "andOperator": false
@@ -102,8 +94,8 @@
         ]
     },
     {
-        "id": "missing_diagnosticreport_subject_element",
-        "title": "Missing DiagnosticReport Subject Element",
+        "id": "missing_diagnosticreport_lab_subject_element",
+        "title": "Missing DiagnosticReport-lab Subject Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing DiagnosticReport.subject. Add a subject reference to identify the patient associated with this diagnostic report. Please correct in the EHR and re-submit.",
@@ -112,7 +104,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "DiagnosticReport\\.subject\\.reference: minimum required = 1, but only found 0"
+                        "regex": "DiagnosticReport\\.subject\\.reference: minimum required = 1, but only found 0 \\(from http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-diagnosticreport-lab\\|"
                     }
                 ],
                 "andOperator": false
@@ -120,8 +112,8 @@
         ]
     },
     {
-        "id": "missing_diagnosticreport_effective_element",
-        "title": "Missing DiagnosticReport Effective Element",
+        "id": "missing_diagnosticreport_lab_effective_element",
+        "title": "Missing DiagnosticReport-lab Effective Element",
         "severity": "WARNING",
         "acceptable": false,
         "guidance": "Missing DiagnosticReport.effective. Populate DiagnosticReport.effective with the clinically relevant date/time or period during which the diagnostic data was collected.  If using DiagnosticReport.effectivePeriod, ensure that the start date/time occurs before the end date/time and that both values are valid FHIR date/time formats. Please correct in the EHR and re-submit.",
@@ -130,7 +122,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "DiagnosticReport\\.effective: minimum required = 1, but only found 0"
+                        "regex": "DiagnosticReport\\.effective: minimum required = 1, but only found 0 \\(from http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-diagnosticreport-lab\\|"
                     }
                 ],
                 "andOperator": false
@@ -138,11 +130,11 @@
         ]
     },
     {
-        "id": "missing_valid_format_for_diagnostic_report_effective_element",
-        "title": "Missing Valid Format for Diagnostic Report Effective Element",
+        "id": "missing_valid_format_for_diagnosticreport_lab_effective_element",
+        "title": "Missing Valid Format for DiagnosticReport-lab Effective Element",
         "severity": "WARNING",
         "acceptable": false,
-        "guidance": "Invalid DiagnosticReport.effective date/time or period format. Use a valid dateTime formatted as YYYY-MM-DDThh:mm:ss±zz:zz. If both a start and end date/time are provided, make sure the start occurs before the end. If an applicable Rx Norm code exists, the code must be used and sent. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+        "guidance": "Invalid DiagnosticReport.effective date/time or period format. Use a valid dateTime formatted as YYYY-MM-DDThh:mm:ss±zz:zz. If both a start and end date/time are provided, make sure the start occurs before the end. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
         "ruleSets": [
             {
                 "rules": [
@@ -160,8 +152,8 @@
         ]
     },
     {
-        "id": "missing_diagnosticreport_specimen_element",
-        "title": "Missing DiagnosticReport Specimen Element",
+        "id": "missing_diagnosticreport_lab_specimen_element",
+        "title": "Missing DiagnosticReport-lab Specimen Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing DiagnosticReport.specimen reference. The DiagnosticReport resource does not contain a specimen reference. Populate DiagnosticReport.specimen with a reference to the Specimen resource associated with the diagnostic report so the source sample used to produce the results can be identified. Please correct in the EHR and re-submit.",
@@ -170,7 +162,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "DiagnosticReport\\.specimen\\.reference: minimum required = 1, but only found 0"
+                        "regex": "DiagnosticReport\\.specimen\\.reference: minimum required = 1, but only found 0 \\(from http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-diagnosticreport-lab\\|"
                     }
                 ],
                 "andOperator": false
@@ -178,8 +170,8 @@
         ]
     },
     {
-        "id": "missing_diagnosticreport_result_element",
-        "title": "Missing DiagnosticReport Result Element",
+        "id": "missing_diagnosticreport_lab_result_element",
+        "title": "Missing DiagnosticReport-lab Result Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing DiagnosticReport.result reference. The DiagnosticReport.result does not contain  references. Populate DiagnosticReport.result with one or more references to Observation resources that contain the findings, measurements, or test results associated with this diagnostic report. Please correct in the EHR and re-submit.",
@@ -188,7 +180,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "DiagnosticReport\\.result\\.reference: minimum required = 1, but only found 0"
+                        "regex": "DiagnosticReport\\.result\\.reference: minimum required = 1, but only found 0 \\(from http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-diagnosticreport-lab\\|"
                     }
                 ],
                 "andOperator": false
@@ -250,7 +242,7 @@
         ]
     },
     {
-        "id": "missing_encounter_classHistory_period_element",
+        "id": "missing_encounter_class_history_period_element",
         "title": "Missing Encounter Class History Period Element",
         "severity": "ERROR",
         "acceptable": false,
@@ -268,7 +260,7 @@
         ]
     },
     {
-        "id": "missing_valid_format_for_encounter_classHistory_period_element",
+        "id": "missing_valid_format_for_encounter_class_history_period_element",
         "title": "Missing Valid Format for Encounter Class History Period Element",
         "severity": "ERROR",
         "acceptable": false,
@@ -291,7 +283,7 @@
     },
     {
         "id": "missing_valid_encounter_class_code",
-        "title": "Missing Valid Encounter class Code",
+        "title": "Missing Valid Encounter Class Code",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Invalid encounter.class. Must include a valid encounter.class or encounter.type code. Please assign an encounter class code from  either valueset 'NHSN Inpatient Encounter Class  Codes' http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1046.274' or  'observation encounter' 'emergency' from valueset 'v3.ActEncounterCode' https://hl7.org/fhir/R4/v3/ActEncounterCode/vs.html' or Please assign the encounter.type code from one of these value sets: 'Emergency Department Visit': 'http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113883.3.117.1.7.1.292', 'Observation Services': 'http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1111.143', 'Encounter Inpatient': 'http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113883.3.666.5.307' If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -317,7 +309,7 @@
     },
     {
         "id": "missing_encounter_class_element",
-        "title": "Missing Encounter class Element",
+        "title": "Missing Encounter Class Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing encounter.class. Must include either an encounter.class or encounter.type code. Please assign an encounter class code from  either valueset 'NHSN Inpatient Encounter Class  Codes' http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1046.274' or  'observation encounter' 'emergency' from valueset 'v3.ActEncounterCode' https://hl7.org/fhir/R4/v3/ActEncounterCode/vs.html' or Please assign the encounter.class code from one of these value sets: 'Emergency Department Visit': 'http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113883.3.117.1.7.1.292', 'Observation Services': 'http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1111.143', 'Encounter Inpatient': 'http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113883.3.666.5.307' If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -411,7 +403,7 @@
     },
     {
         "id": "missing_encounter_hospitalization_dischargedisposition_element",
-        "title": "Missing Encounter hospitalization dischargeDisposition Element",
+        "title": "Missing Encounter Hospitalization dischargeDisposition Element",
         "severity": "WARNING",
         "acceptable": false,
         "guidance": "Missing encounter.hopsitalization.dischargeDisposition. Enter a valid code that represents the kind location after the patient is discharge using a code from the value set  http://terminology.hl7.org/ValueSet/clinical-discharge-disposition. If an appropriate code is not available in the value set, send another code that accurately represents the dischargeDisposition. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -481,7 +473,7 @@
     },
     {
         "id": "missing_encounter_type_element",
-        "title": "Missing Encounter type Element",
+        "title": "Missing Encounter Type Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing encounter.type. Must include either an encounter.class or encounter.type code. Please assign an encounter class code from  either valueset 'NHSN Inpatient Encounter Class  Codes' http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1046.274' or  'observation encounter' 'emergency' from valueset 'v3.ActEncounterCode' https://hl7.org/fhir/R4/v3/ActEncounterCode/vs.html' or Please assign the encounter.type code from one of these value sets: 'Emergency Department Visit': 'http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113883.3.117.1.7.1.292', 'Observation Services': 'http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1111.143', 'Encounter Inpatient': 'http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113883.3.666.5.307'. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -534,7 +526,7 @@
         ]
     },
     {
-        "id": "missing_valid_format_for_encounter_period__element",
+        "id": "missing_valid_format_for_encounter_period_element",
         "title": "Missing Valid Format for Encounter Period Element",
         "severity": "ERROR",
         "acceptable": false,
@@ -557,7 +549,7 @@
     },
     {
         "id": "missing_encounter_location_period_element",
-        "title": "Missing Encounter Location period Element",
+        "title": "Missing Encounter Location Period Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing Encounter.location.period. Enter a valid time period for Encounter.location.period. Provide the start date/time and, if applicable, the end date/time in the format YYYY-MM-DDThh:mm:ss+zz:zz. When both are provided, the start date/time must occur before the end date/time. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -592,7 +584,7 @@
         ]
     },
     {
-        "id": "missing_valid_format_for_encounter_location_period__element",
+        "id": "missing_valid_format_for_encounter_location_period_element",
         "title": "Missing Valid Format for Encounter Location Period Element",
         "severity": "ERROR",
         "acceptable": false,
@@ -669,7 +661,7 @@
     },
     {
         "id": "missing_location_type_element",
-        "title": "Missing Location type Element",
+        "title": "Missing Location Type Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing Location.type. Enter a valid Location.type code. The Location must include, either directly or through its Location.partOf hierarchy, at least one code from the HSLOC Inpatient, Emergency, and Observation Locations Value Set: http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1046.265. Not every Location.type must itself use an HSLOC code, but an HSLOC code must be present somewhere in the Location’s partOf traversal. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -687,7 +679,7 @@
     },
     {
         "id": "missing_valid_location_type_code",
-        "title": "Missing Valid Location type Code",
+        "title": "Missing Valid Location Type Code",
         "severity": "WARNING",
         "acceptable": false,
         "guidance": "Invalid Location.type. Correct the Location.type code so it uses a valid code from the applicable value set. For locations subject to the Encounter profile requirements, ensure that the Location itself or a parent Location in its Location.partOf hierarchy contains a valid code from the HSLOC Inpatient, Emergency, and Observation Locations Value Set. You may also reference the ServiceDeliveryLocationRoleType value set and the CDC NHSN Patient Care Locations guidance when selecting the appropriate location code. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -747,7 +739,7 @@
                         "regex": "Bundle\\.entry\\[\\d+\\]\\.resource.*Medication(?=[)*/]).*\\.code"
                     }
                 ],
-                "andOperator": false
+                "andOperator": true
             }
         ]
     },
@@ -770,8 +762,8 @@
         ]
     },
     {
-        "id": "missing_valid_medicationadministration_medicationCodeableconcept_code",
-        "title": "Missing Valid MedicationAdministration medicationCodeableConcept Code",
+        "id": "missing_valid_medicationadministration_medication_code",
+        "title": "Missing Valid MedicationAdministration Medication Code",
         "severity": "WARNING",
         "acceptable": false,
         "guidance": "The MedicationAdministration.medication code is invalid. Enter a code for MedicationAdministration.medication that identifies the medication administered from the Value Set: https://vsac.nlm.nih.gov/valueset/2.16.840.1.113762.1.4.1010.4/expansion. If an applicable Rx Norm code exists, the code must be used and sent. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -868,7 +860,7 @@
         "title": "Missing Valid Format for MedicationAdministration Effective Element",
         "severity": "ERROR",
         "acceptable": false,
-        "guidance": "Invalid format for MedicationAdministration.effective time or period. Correct the date/time values in  MedicationAdministration.effective to use the format YYYY-MM-DDThh:mm:ss+zz:zz. If both a start and end date/time are provided, make sure the start occurs before the end. If an applicable Rx Norm code exists, the code must be used and sent. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+        "guidance": "Invalid format for MedicationAdministration.effective time or period. Correct the date/time values in  MedicationAdministration.effective to use the format YYYY-MM-DDThh:mm:ss+zz:zz. If both a start and end date/time are provided, make sure the start occurs before the end. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
         "ruleSets": [
             {
                 "rules": [
@@ -905,7 +897,7 @@
     },
     {
         "id": "missing_medicationadministration_dosage_route_element",
-        "title": "Missing MedicationAdministration dosage route Element",
+        "title": "Missing MedicationAdministration Dosage Route Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "MedicationAdministration.dosage.route code is missing. Please provide details on the route the medication was adminstered. Selected a code from the value set http://hl7.org/fhir/ValueSet/route-codes. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -923,7 +915,7 @@
     },
     {
         "id": "missing_valid_medicationadministration_dosage_route_code",
-        "title": "Missing Valid MedicationAdministration dosage route Code",
+        "title": "Missing Valid MedicationAdministration Dosage Route Code",
         "severity": "WARNING",
         "acceptable": false,
         "guidance": "MedicationAdministration.dosage.route code is invalid. Enter a that identifies the route the medication was administred from the value set http://hl7.org/fhir/ValueSet/route-codes. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -963,7 +955,7 @@
     },
     {
         "id": "missing_medicationrequest_category_element",
-        "title": "Missing Medication Request Category Element",
+        "title": "Missing MedicationRequest Category Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "The medicationRequest.category code is missing. Populate the medication.category with a code from http://hl7.org/fhir/ValueSet/medicationrequest-category. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -981,7 +973,7 @@
     },
     {
         "id": "missing_valid_medicationrequest_category_code",
-        "title": "Missing Valid Medication Request Category Code",
+        "title": "Missing Valid MedicationRequest Category Code",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "The medicationRequest.category code is invalid. Populate the medication.category with a code from http://hl7.org/fhir/ValueSet/medicationrequest-category. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -990,7 +982,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "None of the codings provided are in the value set 'Medication request\\s+category\\s+codes' \\(http://hl7\\.org/fhir/ValueSet/medicationrequest-category\\|[^)]+\\)"
+                        "regex": "None of the codings provided are in the value set 'MedicationRequest\\s+category\\s+codes' \\(http://hl7\\.org/fhir/ValueSet/medicationrequest-category\\|[^)]+\\)"
                     }
                 ],
                 "andOperator": false
@@ -999,7 +991,7 @@
     },
     {
         "id": "missing_medicationrequest_status_element",
-        "title": "Missing Medication Request status Element",
+        "title": "Missing MedicationRequest Status Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "The MedicationRequest.status does not contain a code. Populate MedicationRequest.status with a code from http://hl7.org/fhir/ValueSet/medicationrequest-status. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1017,7 +1009,7 @@
     },
     {
         "id": "missing_valid_medicationrequest_status_code",
-        "title": "Missing Valid Medication Request status Code",
+        "title": "Missing Valid MedicationRequest Status Code",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "The MedicationRequest.status code is invalid. Replace the current code with code from http://hl7.org/fhir/ValueSet/medicationrequest-status. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1035,7 +1027,7 @@
     },
     {
         "id": "missing_medicationrequest_medication_element",
-        "title": "Missing Medication Request Medication Element",
+        "title": "Missing MedicationRequest Medication Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "The MedicationRequest.medication is missing. Provide either the missing RxNorm code from value set http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1010.4 or a URL reference to the medication. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1053,7 +1045,7 @@
     },
     {
         "id": "missing_valid_medicationrequest_medication_code",
-        "title": "Missing Valid Medication Request Medication Code",
+        "title": "Missing Valid MedicationRequest Medication Code",
         "severity": "WARNING",
         "acceptable": false,
         "guidance": "The MedicationRequest.medication code is invalid. Provide either the missing RxNorm code from value set http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1010.4 or a URL reference to the medication. If an applicable Rx Norm code exists, the code must be used and sent. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1075,7 +1067,7 @@
     },
     {
         "id": "missing_medicationrequest_subject_element",
-        "title": "Missing Medication Request Subject Element",
+        "title": "Missing MedicationRequest Subject Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "The MedicationRequest.subject is missing. Provide the URL reference to the patient. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1093,7 +1085,7 @@
     },
     {
         "id": "missing_medicationrequest_authoredon_element",
-        "title": "Missing Medication Request authoredOn Element",
+        "title": "Missing MedicationRequest authoredOn Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "MedicationRequest.authoredOn date time is missing. Enter a date/time in the format YYYY-MM-DDThh:mm:ss+zz:zz. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1111,7 +1103,7 @@
     },
     {
         "id": "missing_valid_format_for_medicationrequest_authoredon_element",
-        "title": "Missing Valid Format for Medication Request authoredOn Element",
+        "title": "Missing Valid Format for MedicationRequest authoredOn Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Invalid form at for MedicationRequest.authoredOn date/time. Enter a date/time in the format YYYY-MM-DDThh:mm:ss+zz:zz. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1133,7 +1125,7 @@
     },
     {
         "id": "missing_medicationrequest_dosage_instruction_element",
-        "title": "Missing Medication Request Dosage Instruction Element",
+        "title": "Missing MedicationRequest Dosage Instruction Element",
         "severity": "WARNING",
         "acceptable": false,
         "guidance": "MedicationRequest.dosageInstruction information is missing. If available, please provide instructions on how the medication should be taken. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1151,7 +1143,7 @@
     },
     {
         "id": "missing_medicationrequest_dosage_instruction_timing_element",
-        "title": "Missing Medication Request Dosage Instruction Timing Element",
+        "title": "Missing MedicationRequest Dosage Instruction Timing Element",
         "severity": "WARNING",
         "acceptable": false,
         "guidance": "MedicationRequest.dosageInstruction.timing information is missing. If available, please provide information on the start and end date/time period. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1168,8 +1160,8 @@
         ]
     },
     {
-        "id": "missing_valid_medicationrequest_dosageinstruction_route_code",
-        "title": "Missing Valid MedicationRequest dosageInstruction route Code",
+        "id": "missing_valid_medicationrequest_dosage_instruction_route_code",
+        "title": "Missing Valid MedicationRequest dosageInstruction Route Code",
         "severity": "WARNING",
         "acceptable": false,
         "guidance": "Invalid MedicationRequest.dosageInstruction.route code. Enter a code that identifies the route by which the medication is to be administered from the SNOMED CT Route Codes value set (http://hl7.org/fhir/ValueSet/route-codes). If an applicable code exists, the code must be used and sent. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1186,7 +1178,7 @@
         ]
     },
     {
-        "id": "missing_medicationrequest_dosageinstruction_route_element",
+        "id": "missing_medicationrequest_dosage_instruction_route_element",
         "title": "Missing MedicationRequest dosageInstruction route Element",
         "severity": "ERROR",
         "acceptable": false,
@@ -1205,16 +1197,16 @@
     },
     {
         "id": "missing_medicationrequest_do_not_perform_element",
-        "title": "Missing Medication Request Do Not Perform Element",
+        "title": "Missing MedicationRequest Do Not Perform Element",
         "severity": "WARNING",
         "acceptable": true,
-        "guidance": "The Do Not Perform indicator is not provided for this medication request. If available, please specify whether the medication should be performed (false) or not performed (true). For all other inquiries, please submit an NHSN ServiceNow ticket.",
+        "guidance": "The Do Not Perform indicator is not provided for this MedicationRequest. If available, please specify whether the medication should be performed (false) or not performed (true). For all other inquiries, please submit an NHSN ServiceNow ticket.",
         "ruleSets": [
             {
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "MedicationRequest\\. doNotPerform: minimum required = 1, but only found 0"
+                        "regex": "MedicationRequest\\.doNotPerform: minimum required = 1, but only found 0"
                     }
                 ],
                 "andOperator": false
@@ -1240,8 +1232,8 @@
         ]
     },
     {
-        "id": "missing_valid_vital_signs_observation_category_code",
-        "title": "Missing Valid Vital Signs Observation Category Code",
+        "id": "missing_valid_observation_vital_signs_category_code",
+        "title": "Missing Valid Observation-vital signs Category Code",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Invalid code for Observation.category for vital signs. Replace the current code with VSCat code from http://hl7.org/fhir/ValueSet/observation-category. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1258,8 +1250,8 @@
         ]
     },
     {
-        "id": "missing_valid_lab_observation_category_code",
-        "title": "Missing Valid Lab Observation Category Code",
+        "id": "missing_valid_observation_lab_category_code",
+        "title": "Missing Valid Observation-lab Category Code",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Invalid Observation.category.code. Replace Observation.category with an appropriate category code such as \"laboratory\" for a lab from  http://terminology.hl7.org/CodeSystem/observation-category. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1276,8 +1268,8 @@
         ]
     },
     {
-        "id": "missing_vital_signs_observation_category_element",
-        "title": "Missing Vital Sign Observation Category Element",
+        "id": "missing_observation_vital_signs_category_element",
+        "title": "Missing Observation-vital signs Category Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing Observation.category code for vital signs. Populate Observation.category for vital signs with VSCat code from http://hl7.org/fhir/ValueSet/observation-category. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1286,7 +1278,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "Observation\\.category: minimum required = 1, but only found 0"
+                        "regex": "Observation\\.category: minimum required = 1, but only found 0 \\(from http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-observation-vitals\\|"
                     }
                 ],
                 "andOperator": false
@@ -1294,8 +1286,8 @@
         ]
     },
     {
-        "id": "missing_lab_observation_category_element",
-        "title": "Missing Lab Observation Category Element",
+        "id": "missing_observation_lab_category_element",
+        "title": "Missing Observation-lab Category Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing observation.category.code. Populate Observation.category with an appropriate category code such as \"laboratory\" for a lab from  http://terminology.hl7.org/CodeSystem/observation-category. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1304,7 +1296,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "Observation\\.category: minimum required = 1, but only found 0"
+                        "regex": "Observation\\.category: minimum required = 1, but only found 0 \\(from \\[http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-observation-lab\\|"
                     }
                 ],
                 "andOperator": false
@@ -1312,8 +1304,8 @@
         ]
     },
     {
-        "id": "missing_vital_signs_observation_code_element",
-        "title": "Missing Vital Signs Observation Code Element",
+        "id": "missing_observation_vital_signs_code_element",
+        "title": "Missing Observation-vital signs Code Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing Observation.code for vital signs. Populate Observation. code with a LOINC code from Vital Signs ValueSet: http://hl7.org/fhir/us/core/ValueSet/us-core-vital-signs. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1322,7 +1314,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "Observation\\.code: minimum required = 1, but only found 0"
+                        "regex": "Observation\\.code: minimum required = 1, but only found 0 \\(from http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-observation-vitals\\|"
                     }
                 ],
                 "andOperator": false
@@ -1330,8 +1322,8 @@
         ]
     },
     {
-        "id": "missing_vital_sign_observation_part_of__reference_element",
-        "title": "Missing Vital Sign Observation Part Of Reference Element",
+        "id": "missing_observation_vital_signs_part_of_element",
+        "title": "Missing Observation-vital signs Part Of Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing observation.partOf reference.  Provide a reference to the event that this observation was a  part of. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1340,7 +1332,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "Observation\\.partOf\\.reference: minimum required = 1, but only found 0"
+                        "regex": "Observation\\.partOf\\.reference: minimum required = 1, but only found 0 \\(from http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-observation-vitals\\|"
                     }
                 ],
                 "andOperator": false
@@ -1348,8 +1340,8 @@
         ]
     },
     {
-        "id": "missing_valid_vital_signs_observation_status_code",
-        "title": "Missing Valid Vital Signs Observation status Code",
+        "id": "missing_valid_observation_vital_signs_status_code",
+        "title": "Missing Valid Observation-vital signs Status Code",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Invalid code for Observation.status for vital signs. Replace the current code with code from http://hl7.org/fhir/ValueSet/observation-status. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1366,8 +1358,8 @@
         ]
     },
     {
-        "id": "missing_valid_lab_observation_status_code",
-        "title": "Missing Valid Lab Observation status Code",
+        "id": "missing_valid_observation_lab_status_code",
+        "title": "Missing Valid Observation-lab Status Code",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Invalid code for Observation.status for labs.  Use a status code from the FHIR ObservationStatus value set.  For labs, reference Non-Negative Observation Status: http://hl7.org/fhir/us/qicore/ValueSet/qicore-non-negative-observation-status. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1384,8 +1376,8 @@
         ]
     },
     {
-        "id": "missing_vital_sign_observation_status_element",
-        "title": "Missing Observation status Element",
+        "id": "missing_observation_vital_signs_status_element",
+        "title": "Missing Observation-vital signs Status Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing observation.status code for vital signs. The Observation.status for vital signs does not contain a code. Populate Observation.status for vital signs with a code from http://hl7.org/fhir/ValueSet/observation-status. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1394,7 +1386,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "Observation\\.status: minimum required = 1, but only found 0"
+                        "regex": "Observation\\.status: minimum required = 1, but only found 0 \\(from http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-observation-vitals\\|"
                     }
                 ],
                 "andOperator": false
@@ -1402,8 +1394,8 @@
         ]
     },
     {
-        "id": "missing_lab_observation_status_element",
-        "title": "Missing Lab Observation status Element",
+        "id": "missing_observation_lab_status_element",
+        "title": "Missing Observation-lab Status Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing observation.status code for lab. Populate Observation.status with a valid status code that indicates the current state of the observation. For labs, reference Non-Negative Observation Status: http://hl7.org/fhir/us/qicore/ValueSet/qicore-non-negative-observation-status. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1412,7 +1404,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "Observation\\.status: minimum required = 1, but only found 0"
+                        "regex": "Observation\\.status: minimum required = 1, but only found 0 \\(from \\[http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-observation-lab\\|"
                     }
                 ],
                 "andOperator": false
@@ -1420,8 +1412,8 @@
         ]
     },
     {
-        "id": "missing_vital_signs_observation_encounter_element",
-        "title": "Missing Vital Signs Observation Encounter Element",
+        "id": "missing_observation_vital_signs_encounter_element",
+        "title": "Missing Observation-vital signs Encounter Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing Observation.encounter reference. Provide the URL reference to the encounter where these vital signs were obtained. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1430,7 +1422,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "Observation\\.encounter\\.reference: minimum required = 1, but only found 0"
+                        "regex": "Observation\\.encounter\\.reference: minimum required = 1, but only found 0 \\(from http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-observation-vitals\\|"
                     }
                 ],
                 "andOperator": false
@@ -1438,8 +1430,8 @@
         ]
     },
     {
-        "id": "missing_lab_observation_encounter_element",
-        "title": "Missing Lab Observation Encounter Element",
+        "id": "missing_observation_lab_encounter_element",
+        "title": "Missing Observation-lab Encounter Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing observation.encounter reference. Provide the URL reference to the encounter where this observation is made. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1448,7 +1440,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "Observation\\.encounter\\.reference: minimum required = 1, but only found 0"
+                        "regex": "Observation\\.encounter\\.reference: minimum required = 1, but only found 0 \\(from \\[http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-observation-lab\\|"
                     }
                 ],
                 "andOperator": false
@@ -1456,8 +1448,8 @@
         ]
     },
     {
-        "id": "missing_vital_signs_observation_subject_element",
-        "title": "Missing Vital Signs Observation Subject Element",
+        "id": "missing_observation_vital_signs_subject_element",
+        "title": "Missing Observation-vital signs Subject Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing Observation.subject reference. Provide the URL reference to the patient. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1466,7 +1458,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "Observation\\.subject\\.reference: minimum required = 1, but only found 0"
+                        "regex": "Observation\\.subject\\.reference: minimum required = 1, but only found 0 \\(from http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-observation-vitals\\|"
                     }
                 ],
                 "andOperator": false
@@ -1474,8 +1466,8 @@
         ]
     },
     {
-        "id": "missing_lab_observation_subject_element",
-        "title": "Missing Lab Observation Subject Element",
+        "id": "missing_observation_lab_subject_element",
+        "title": "Missing Observation-lab Subject Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing observation.subject reference. Provide the URL reference to the patient, or group of patients, location, or device this observation is about and into whose record the observation is placed. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1484,7 +1476,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "Observation\\.subject\\.reference: minimum required = 1, but only found 0"
+                        "regex": "Observation\\.subject\\.reference: minimum required = 1, but only found 0 \\(from \\[http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-observation-lab\\|"
                     }
                 ],
                 "andOperator": false
@@ -1492,8 +1484,8 @@
         ]
     },
     {
-        "id": "missing_lab_observation_specimen_element",
-        "title": "Missing Lab Observation Specimen Element",
+        "id": "missing_observation_lab_specimen_element",
+        "title": "Missing Observation-lab Specimen Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing Observation.specimen reference. Provide the URL reference to the specimen for this observation. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1502,7 +1494,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "Observation\\.specimen\\.reference: minimum required = 1, but only found 0"
+                        "regex": "Observation\\.specimen\\.reference: minimum required = 1, but only found 0 \\(from \\[http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-observation-lab\\|"
                     }
                 ],
                 "andOperator": false
@@ -1510,8 +1502,8 @@
         ]
     },
     {
-        "id": "missing_vital_signs_observation_effective_datetime_element",
-        "title": "Missing Vital Signs Observation Effective DateTime Element",
+        "id": "missing_observation_vital_signs_effective_datetime_element",
+        "title": "Missing Observation-vital signs Effective DateTime Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing Observation.effective date time or period. Enter a valid date time or period for Observation.effective. Provide the start date/time and, if applicable, the end date/time in the format YYYY-MM-DDThh:mm:ss+zz:zz. When both are provided, the start date/time must occur before the end date/time.",
@@ -1520,7 +1512,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "Observation\\.effective(\\[x\\]|DateTime|Period)?: minimum required = 1, but only found 0"
+                        "regex": "Observation\\.effective(\\[x\\]|DateTime|Period)?: minimum required = 1, but only found 0 \\(from http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-observation-vitals\\|"
                     }
                 ],
                 "andOperator": false
@@ -1528,8 +1520,8 @@
         ]
     },
     {
-        "id": "missing_lab_observation_effective_datetime_element",
-        "title": "Missing Lab Observation Effective DateTime Element",
+        "id": "missing_observation_lab_effective_datetime_element",
+        "title": "Missing Observation-lab Effective DateTime Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing observation.effective date/time. Populate Observation.effective with the date/time or period when the observation was performed or collected. Ensure the date/time falls within or overlaps the required measurement period when applicable. Use the format YYYY-MM-DDThh:mm:ss+zz:zz.",
@@ -1538,7 +1530,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "Observation\\.effective(\\[x\\]|DateTime|Period)?: minimum required = 1, but only found 0"
+                        "regex": "Observation\\.effective(\\[x\\]|DateTime|Period)?: minimum required = 1, but only found 0 \\(from \\[http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-observation-lab\\|"
                     }
                 ],
                 "andOperator": false
@@ -1546,8 +1538,8 @@
         ]
     },
     {
-        "id": "missing_valid_format_for_vital_signs_observation_effective_datetime_element",
-        "title": "Missing Valid Format for Vital Signs Observation Effective DateTime Element",
+        "id": "missing_valid_format_for_observation_vital_signs_effective_datetime_element",
+        "title": "Missing Valid Format for Observation-vital signs Effective DateTime Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": " Invalid format for Observation.effective time or period. Correct the date/time values in Observation.effective to use the format YYYY-MM-DDThh:mm:ss+zz:zz. If both a start and end date/time are provided, make sure the start occurs before the end.",
@@ -1568,8 +1560,8 @@
         ]
     },
     {
-        "id": "missing_valid_format_for_lab_observation_effective_datetime_element",
-        "title": "Missing Valid Format for Lab Observation Effective DateTime Element",
+        "id": "missing_valid_format_for_observation_lab_effective_datetime_element",
+        "title": "Missing Valid Format for Observation-lab Effective DateTime Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Invalid Observation.effective date/time format. Provide a valid date/time in the format YYYY-MM-DDThh:mm:ss+zz:zz.",
@@ -1590,8 +1582,8 @@
         ]
     },
     {
-        "id": "missing_valid_lab_observation_interpretation_code",
-        "title": "Missing Valid Lab Observation Interpretation Code",
+        "id": "missing_valid_observation_lab_interpretation_code",
+        "title": "Missing Valid Observation-lab Interpretation Code",
         "severity": "WARNING",
         "acceptable": false,
         "guidance": " Invalid Observation.interpretation. Select a valid observation result from value set  http://hl7.org/fhir/ValueSet/observation-interpretation. If an applicable code  exists, the code must be used and sent. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1608,8 +1600,8 @@
         ]
     },
     {
-        "id": "missing_lab_observation_interpretation_element",
-        "title": "Missing Valid Observation interpretation Code",
+        "id": "missing_observation_lab_interpretation_element",
+        "title": "Missing Observation-lab Interpretation Element",
         "severity": "WARNING",
         "acceptable": false,
         "guidance": "The Observation resource does not contain an interpretation. Consider populating Observation.interpretation with a clinically relevant interpretation, such as high, low, normal, or abnormal, to help users understand the significance of the observation result from value set  http://hl7.org/fhir/ValueSet/observation-interpretation. If an applicable code  exists, the code must be used and sent. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1618,7 +1610,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "Observation\\.interpretation: minimum required = 1, but only found 0"
+                        "regex": "Observation\\.interpretation: minimum required = 1, but only found 0 \\(from \\[http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-observation-lab\\|"
                     }
                 ],
                 "andOperator": false
@@ -1626,8 +1618,8 @@
         ]
     },
     {
-        "id": "missing_lab_observation_issued_datetime_element",
-        "title": "Missing Lab Observation Issued DateTime Element",
+        "id": "missing_observation_lab_issued_datetime_element",
+        "title": "Missing Observation-lab Issued DateTime Element",
         "severity": "WARNING",
         "acceptable": false,
         "guidance": "Missing Observation.issued date/time. Consider populating Observation.issued with the date and time the observation result was made available or released by the source system. Providing this information improves traceability, data quality, and clinical context. Use the format YYYY-MM-DDThh:mm:ss+zz:zz.",
@@ -1648,8 +1640,8 @@
         ]
     },
     {
-        "id": "missing_valid_format_for_lab_observation_issued_datetime_element",
-        "title": "Missing Valid Format for Lab Observation Issued DateTime Element",
+        "id": "missing_valid_format_for_observation_lab_issued_datetime_element",
+        "title": "Missing Valid Format for Observation-lab Issued DateTime Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Invalid Observation.issued date/time format. Provide a valid date/time in the format YYYY-MM-DDThh:mm:ss+zz:zz.",
@@ -1670,8 +1662,8 @@
         ]
     },
     {
-        "id": "missing_lab_observation_value_element",
-        "title": "Missing Lab Observation value Element",
+        "id": "missing_observation_lab_value_element",
+        "title": "Missing Observation-lab Value Element",
         "severity": "WARNING",
         "acceptable": true,
         "guidance": "Missing observation.value or  laboratory result. This Observation must include a result. Add a result in Observation.value. If the result is represented by Observation.component or Observation.hasMember, no top-level value is required. If a result is unavailable, provide Observation.dataAbsentReason explaining why the result is missing. For coded results, use the required SNOMED CT code. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1692,8 +1684,8 @@
         ]
     },
     {
-        "id": "missing_vital_signs_observation_value_element",
-        "title": "Missing Vital Sign Observation Value Element",
+        "id": "missing_observation_vital_signs_value_element",
+        "title": "Missing Observation-vital signs Value Element",
         "severity": "WARNING",
         "acceptable": false,
         "guidance": "Missing observation.value. Add a vital sign result in Observation.value. If the result is represented by Observation.component or Observation.hasMember, no top-level value is required. If a result is unavailable, provide Observation.dataAbsentReason explaining why the result is missing. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1714,8 +1706,8 @@
         ]
     },
     {
-        "id": "missing_valid_lab_observation_component_code",
-        "title": "Missing Valid Observation component Code",
+        "id": "missing_valid_observation_lab_component_code",
+        "title": "Missing Valid Observation-lab Component Code",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Invalid Observation.component.code.  Provide a valid LOINC code and include it in Observation.code from US Core Laboratory Test Codes: http://hl7.org/fhir/us/core/ValueSet/us-core-laboratory-test-codes) value set if exist. Local codes or codes from third party pharmacy vendors must be mapped to standardized codes. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1732,8 +1724,30 @@
         ]
     },
     {
-        "id": "missing_lab_observation_component_element",
-        "title": "Missing Lab Observation Component Element",
+        "id": "missing_valid_observation_lab_code",
+        "title": "Missing Valid Observation-lab Code",
+        "severity": "ERROR",
+        "acceptable": false,
+        "guidance": "Invalid Observation.code. Add a valid LOINC code to Observation.code. Use a laboratory LOINC code (CLASSTYPE=1) for lab observations and a code from http://hl7.org/fhir/us/core/ValueSet/us-core-laboratory-test-codes. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+        "ruleSets": [
+            {
+                "rules": [
+                    {
+                        "field": "DETAILS_TEXT",
+                        "regex": "None of the codings provided are in the value set 'US Core Laboratory Test Codes' \\(http://hl7\\.org/fhir/us/core/ValueSet/us-core-laboratory-test-codes\\|[^)]+\\)"
+                    },
+                    {
+                        "field": "EXPRESSION",
+                        "regex": "^Bundle\\.entry\\[\\d+\\]\\.resource(?:\\.ofType\\(Observation\\)(?:\\.where\\([^)]*\\))?|/\\*Observation/[^*]*\\*/)\\.code$"
+                    }
+                ],
+                "andOperator": true
+            }
+        ]
+    },
+    {
+        "id": "missing_observation_lab_component_element",
+        "title": "Missing Observation-lab Component Element",
         "severity": "WARNING",
         "acceptable": true,
         "guidance": "Missing Observation.component information. Consider populating Observation.component with a clinically relevant results. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1742,7 +1756,7 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "Observation\\.component: minimum required = 1, but only found 0"
+                        "regex": "Observation\\.component: minimum required = 1, but only found 0 \\(from \\[http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-observation-lab\\|"
                     }
                 ],
                 "andOperator": false
@@ -1750,8 +1764,8 @@
         ]
     },
     {
-        "id": "missing_lab_observation_component_code_element",
-        "title": "Missing Lab Observation Component Code Element",
+        "id": "missing_observation_lab_component_code_element",
+        "title": "Missing Observation-lab Component Code Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing Observation.component.code. Provide a valid LOINC code and include it in Observation.code from US Core Laboratory Test Codes: http://hl7.org/fhir/us/core/ValueSet/us-core-laboratory-test-codes) value set if exist. Local codes or codes from third party pharmacy vendors must be mapped to standardized codes. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -1760,7 +1774,25 @@
                 "rules": [
                     {
                         "field": "DETAILS_TEXT",
-                        "regex": "Observation\\.component\\.code: minimum required = 1, but only found 0"
+                        "regex": "Observation\\.component\\.code: minimum required = 1, but only found 0 \\(from \\[http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-observation-lab\\|"
+                    }
+                ],
+                "andOperator": false
+            }
+        ]
+    },
+    {
+        "id": "missing_observation_lab_code_element",
+        "title": "Missing Observation-lab Code Element",
+        "severity": "ERROR",
+        "acceptable": false,
+        "guidance": "Missing Observation.code.  Add a valid LOINC code to Observation.code. Use a laboratory LOINC code (CLASSTYPE=1) for lab observations and a code from http://hl7.org/fhir/us/core/ValueSet/us-core-laboratory-test-codes. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+        "ruleSets": [
+            {
+                "rules": [
+                    {
+                        "field": "DETAILS_TEXT",
+                        "regex": "Observation\\.code: minimum required = 1, but only found 0 \\(from \\[http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ach-monthly-observation-lab\\|"
                     }
                 ],
                 "andOperator": false
@@ -1996,7 +2028,7 @@
         "title": "Missing Patient Birth Date Element",
         "severity": "ERROR",
         "acceptable": false,
-        "guidance": "Missing patient date of birth (DOB).  Please provide the data in the form at of YYYY/MM/DD. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+        "guidance": "Missing patient date of birth (DOB).  Please provide the data in the form at of YYYY-MM-DD. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
         "ruleSets": [
             {
                 "rules": [
@@ -2014,7 +2046,7 @@
         "title": "Missing Valid Format for Patient Birth Date Element",
         "severity": "ERROR",
         "acceptable": false,
-        "guidance": "Invalid date of birth (DOB) format. Please enter the DOB in YYYY/MM/DD format. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+        "guidance": "Invalid date of birth (DOB) format. Please enter the DOB in YYYY-MM-DD format. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
         "ruleSets": [
             {
                 "rules": [
@@ -2032,11 +2064,11 @@
         ]
     },
     {
-        "id": "missing_patient_deceased_boolean_element",
-        "title": "Missing Patient Deceased Boolean Element",
+        "id": "missing_patient_deceased_element",
+        "title": "Missing Patient Deceased Element",
         "severity": "WARNING",
         "acceptable": true,
-        "guidance": "Missing patient's date of death status. If the patient is deceased, please enter the date of death in YYYY/MM/DD format or indicate whether the patient is deceased by supplying a true or false value. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+        "guidance": "Missing patient's date of death status. If the patient is deceased, please enter the date of death in YYYY-MM-DD format or indicate whether the patient is deceased by supplying a true or false value. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
         "ruleSets": [
             {
                 "rules": [
@@ -2073,7 +2105,7 @@
     },
     {
         "id": "missing_valid_specimen_type_code",
-        "title": "Missing Valid Specimen type Code",
+        "title": "Missing Valid Specimen Type Code",
         "severity": "WARNING",
         "acceptable": false,
         "guidance": "Invalid specimen type code. Please specify the kind of material collected (for example, blood, urine, or tissue) by providing a valid code  from Specimen Type: https://vsac.nlm.nih.gov/valueset/2.16.840.1.113762.1.4.1099.54/expansion. If an applicable SNOMED-CT code  exists, the code must be used and sent. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -2091,7 +2123,7 @@
     },
     {
         "id": "missing_specimen_type_element",
-        "title": "Missing Specimen type Element",
+        "title": "Missing Specimen Type Element",
         "severity": "ERROR",
         "acceptable": false,
         "guidance": "Missing specimen type code. Please specify the kind of material collected (for example, blood, urine, or tissue) by providing a valid code  from Specimen Type: https://vsac.nlm.nih.gov/valueset/2.16.840.1.113762.1.4.1099.54/expansion.  If an applicable SNOMED-CT code  exists, the code must be used and sent. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
@@ -2112,7 +2144,7 @@
         "title": "Missing Valid Format for Specimen Collection Collected Element",
         "severity": "ERROR",
         "acceptable": false,
-        "guidance": "Invalid format for Specimen.collection.collected or period. Correct the date/time values in Encounter.period to use the format YYYY-MM-DDThh:mm:ss+zz:zz. If both a start and end date/time are provided, make sure the start occurs before the end. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
+        "guidance": "Invalid format for Specimen.collection.collected or period. Correct the date/time values in Specimen.collection.collected to use the format YYYY-MM-DDThh:mm:ss+zz:zz. If both a start and end date/time are provided, make sure the start occurs before the end. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
         "ruleSets": [
             {
                 "rules": [
@@ -2166,8 +2198,8 @@
         ]
     },
     {
-        "id": "missing_specimen_accessionIdentifier_element",
-        "title": "Missing Specimen accessionIdentifier Element",
+        "id": "missing_specimen_accession_identifier_element",
+        "title": "Missing Specimen Accession Identifier Element",
         "severity": "WARNING",
         "acceptable": false,
         "guidance": "Missing an accession identifier assigned by the laboratory. Please add the accession identifier (Specimen.accessionIdentifier) to help uniquely identify and track the specimen. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit an NHSN ServiceNow ticket.",
