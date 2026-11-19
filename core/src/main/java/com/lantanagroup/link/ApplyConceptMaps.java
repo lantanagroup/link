@@ -21,7 +21,7 @@ public class ApplyConceptMaps {
             .map(Extension::getValue)
             .filter(value -> value instanceof Coding)
             .map(value -> (Coding) value)
-            .anyMatch(mappedCoding -> mappedCoding.is(system, code));
+            .anyMatch(mappedCoding -> FhirHelper.codingIs(mappedCoding, system, code));
   }
 
   public ApplyConceptMaps() {}
