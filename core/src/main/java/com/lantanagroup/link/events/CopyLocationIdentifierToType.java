@@ -1,6 +1,7 @@
 package com.lantanagroup.link.events;
 
 import com.lantanagroup.link.ApplyConceptMaps;
+import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.IReportGenerationDataEvent;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.model.ReportContext;
@@ -17,7 +18,7 @@ public class CopyLocationIdentifierToType implements IReportGenerationDataEvent 
   private static boolean existsInType(Location location, Identifier identifier) {
     return location.getType().stream()
             .flatMap(type -> type.getCoding().stream())
-            .anyMatch(coding -> coding.is(identifier.getSystem(), identifier.getValue())
+            .anyMatch(coding -> FhirHelper.codingIs(coding, identifier.getSystem(), identifier.getValue())
                     || ApplyConceptMaps.isMapped(coding, identifier.getSystem(), identifier.getValue()));
   }
 

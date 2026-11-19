@@ -1,6 +1,7 @@
 package com.lantanagroup.link.events;
 
 import com.lantanagroup.link.ApplyConceptMaps;
+import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.IReportGenerationDataEvent;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.db.TenantService;
@@ -21,7 +22,7 @@ public class CopyEncounterLocationDisplayToLocationType implements IReportGenera
   private static boolean existsInType(Location location, Coding coding) {
     return location.getType().stream()
             .flatMap(type -> type.getCoding().stream())
-            .anyMatch(c -> c.is(coding.getSystem(), coding.getCode())
+            .anyMatch(c -> FhirHelper.codingIs(c, coding.getSystem(), coding.getCode())
                     || ApplyConceptMaps.isMapped(c, coding.getSystem(), coding.getCode()));
   }
 
@@ -61,7 +62,8 @@ public class CopyEncounterLocationDisplayToLocationType implements IReportGenera
         if(pieces.length >= 3) {
           code = pieces[2];
         } else {
-          logger.debug("Display string '{}' doesn't have a third component for code extraction", display);
+          //If encounter.location.location.display does not fit the "1, 2, 3, etc." format, just set code to display
+          code = display;
         }
         if(!code.isEmpty()){
           String locationReference = encounterLocation.getLocation().getReference();

@@ -236,6 +236,19 @@ public class FhirHelper {
     return resources;
   }
 
+  /**
+   * Null-safe equivalent of {@link Coding#is(String, String)}. HAPI's implementation checks
+   * {@code hasSystem()}/{@code hasCode()}, which are true when the primitive carries only an extension
+   * (e.g. data-absent-reason) and no value, and then dereferences the null value.
+   */
+  public static boolean codingIs(Coding coding, String system, String code) {
+    return coding != null
+            && coding.getSystem() != null
+            && coding.getCode() != null
+            && coding.getSystem().equals(system)
+            && coding.getCode().equals(code);
+  }
+
   public static boolean hasNonzeroPopulationCount(MeasureReport measureReport) {
     return measureReport.getGroup().stream()
             .flatMap(group -> group.getPopulation().stream())

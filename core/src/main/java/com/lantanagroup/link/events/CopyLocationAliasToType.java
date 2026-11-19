@@ -3,6 +3,7 @@ package com.lantanagroup.link.events;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.ApplyConceptMaps;
 import com.lantanagroup.link.Constants;
+import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.IReportGenerationDataEvent;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.model.ReportContext;
@@ -27,7 +28,7 @@ public class CopyLocationAliasToType implements IReportGenerationDataEvent {
   private static boolean existsInType(Location location, StringType alias) {
     return location.getType().stream()
             .flatMap(type -> type.getCoding().stream())
-            .anyMatch(coding -> coding.is(Constants.LocationAliasCodeSystem, alias.asStringValue())
+            .anyMatch(coding -> FhirHelper.codingIs(coding, Constants.LocationAliasCodeSystem, alias.asStringValue())
                     || ApplyConceptMaps.isMapped(coding, Constants.LocationAliasCodeSystem, alias.asStringValue()));
   }
 
